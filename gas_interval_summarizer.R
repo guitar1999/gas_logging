@@ -20,6 +20,9 @@ f$status[f$tdiff > 3600] <- 'unknown'
 f$status[is.na(f$status)] <- 'on'
 f$status[f$watts > 500] <- 'dehumidification'
 
+# Set watts = 0 where watts is NA
+f$watts[is.na(f$watts) == TRUE] <- 0
+
 # Now predict on the data
 f$heatcall <- predict(m, f)
 
