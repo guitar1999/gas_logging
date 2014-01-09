@@ -5,16 +5,17 @@ if (! 'package:RPostgreSQL' %in% search()) {
 
 source('/home/jessebishop/scripts/electricity_logging/barplot.R')
 
-query <- "SELECT day_of_week AS label, dow, btu, btu_avg, complete FROM gas_usage_dow WHERE NOT dow = date_part('dow', CURRENT_TIMESTAMP) ORDER BY timestamp;"
+query <- "SELECT year AS label, btu, complete FROM gas_usage_yearly WHERE NOT year = date_part('year', CURRENT_TIMESTAMP) AND NOT timestamp IS NULL ORDER BY timestamp;"
 res <- dbGetQuery(con, query)
 
-fname <- '/var/www/electricity/ng_dow.png'
-title <- "Furnace BTUs Used in the Last Week"
-label.x <- "Day"
-label.y <- "BTU"
+fname <- '/var/www/electricity/ng_yearly.png'
+title <- "Electricity Usage By Year"
+label.x <- "Year"
+label.y <- "btu"
 
 png(filename=fname, width=1024, height=400, units='px', pointsize=12, bg='white')
 barplot(res$btu, names.arg=res$label, col='orange')
 dev.off()
 
 system(paste("scp", fname, "web309.webfaction.com:/home/jessebishop/webapps/htdocs/home/frompi/electricity/", sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
+

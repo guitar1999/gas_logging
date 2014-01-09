@@ -16,7 +16,7 @@ f <- dbGetQuery(con, query)
 # Set a furnace status
 f$status[f$watts < 60] <- 'blower'
 f$status[f$watts < 40] <- 'off'
-f$status[f$tdiff > 3600] <- 'unknown'
+f$status[f$tdiff > 600] <- 'unknown'
 f$status[is.na(f$status)] <- 'on'
 f$status[f$watts > 500] <- 'dehumidification'
 
