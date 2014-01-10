@@ -5,9 +5,27 @@ if (! 'package:RPostgreSQL' %in% search()) {
 
 source('/home/jessebishop/scripts/electricity_logging/barplot.R')
 
-query <- "SELECT hour AS label, btu, btu_avg, complete FROM gas_usage_hourly ORDER BY timestamp;" # WHERE NOT hour = date_part('hour', CURRENT_TIMESTAMP) ORDER BY timestamp;"
+# Get historic data
+query <- "SELECT hour AS label, btu, btu_avg, complete FROM gas_usage_hourly WHERE NOT hour = date_part('hour', CURRENT_TIMESTAMP) ORDER BY timestamp;"
 res <- dbGetQuery(con, query)
 
+# Get current data
+query <- "SELECT hour AS label, btu, btu_avg, complete, timestamp FROM gas_usage_hourly WHERE hour = date_part('hour', CURRENT_TIMESTAMP);"
+res1 <- dbGetQuery(con,query)
+
+# create object updatequery as a dummy to skip getting commandArgs in the sourced file below
+updatequery <- 1
+
+# Summarize the current BTUs
+query <- paste("SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE measurement_time > '", res1$timestamp, "' AND date_part('hour', measurement_time) = ", res1$label, ";", sep='')
+btu <- source('/home/jessebishop/scripts/gas_logging/gas_interval_summarizer.R')$value
+res1$btu <- res1$btu + btu
+
+# Update the current hour
+query <- paste("UPDATE gas_usage_hourly SET (btu, timestamp) = (", res1$btu, ", CURRENT_TIMESTAMP) WHERE hour = ", res1$label, ";", sep='')
+dbGetQuery(con,query)
+
+res <- rbind(res, res1[1,1:4])
 
 # Do some sunrise and sunset calculations
 today <- Sys.Date()

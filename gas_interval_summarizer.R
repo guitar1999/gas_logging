@@ -6,9 +6,11 @@ if (! 'package:RPostgreSQL' %in% search()) {
 # Load the RData file with the model
 load('/home/jessebishop/scripts/gas_logging/data-furnace_model.RData')
 
-# Get the argument(s)
-args <- commandArgs(trailingOnly=TRUE)
-query <- toString(args[1])
+# Get the argument(s) if running from commandline
+if (exists('updatequery') == FALSE){
+    args <- commandArgs(trailingOnly=TRUE)
+    query <- toString(args[1])
+}
 
 # Run the query
 f <- dbGetQuery(con, query)
