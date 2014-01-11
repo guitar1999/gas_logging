@@ -8,6 +8,14 @@ source('/home/jessebishop/scripts/electricity_logging/barplot.R')
 query <- "SELECT day_of_week AS label, dow, btu, btu_avg, complete FROM gas_usage_dow WHERE NOT dow = date_part('dow', CURRENT_TIMESTAMP) ORDER BY timestamp;"
 res <- dbGetQuery(con, query)
 
+# Get current data
+query <- "SELECT day_of_week AS label, btu, btu_avg, complete, timestamp FROM gas_usage_dow WHERE hour = date_part('hour', CURRENT_TIMESTAMP);"
+res1 <- dbGetQuery(con,query)
+
+
+res <- rbind(res, res1[1,1:4])
+
+
 fname <- '/var/www/electricity/ng_dow.png'
 title <- "Furnace BTUs Used in the Last Week"
 label.x <- "Day"
