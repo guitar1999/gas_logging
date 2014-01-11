@@ -9,9 +9,20 @@ query <- "SELECT day_of_week AS label, dow, btu, btu_avg, complete FROM gas_usag
 res <- dbGetQuery(con, query)
 
 # Get current data
-query <- "SELECT day_of_week AS label, btu, btu_avg, complete, timestamp FROM gas_usage_dow WHERE hour = date_part('hour', CURRENT_TIMESTAMP);"
+query <- "SELECT day_of_week AS label, btu, btu_avg, complete, timestamp, dow FROM gas_usage_dow WHERE dow = date_part('dow', CURRENT_TIMESTAMP);"
 res1 <- dbGetQuery(con,query)
 
+# create object updatequery as a dummy to skip getting commandArgs in the sourced file below
+updatequery <- 1
+
+# Summarize the current BTUs
+query <- paste("SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE measurement_time > '", res1$timestamp, "' AND date_part('dow', measurement_time) = ", res1$dow, ";", sep='')
+btu <- source('/home/jessebishop/scripts/gas_logging/gas_interval_summarizer.R')$value
+res1$btu <- res1$btu + btu
+
+# Update the current hour
+query <- paste("UPDATE gas_usage_dow SET (btu, timestamp) = (", res1$btu, ", CURRENT_TIMESTAMP) WHERE dow = ", res1$dow, ";", sep='')
+dbGetQuery(con,query)
 
 res <- rbind(res, res1[1,1:4])
 
