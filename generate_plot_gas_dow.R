@@ -9,7 +9,7 @@ query <- "SELECT day_of_week AS label, dow, btu, btu_avg, complete FROM gas_usag
 res <- dbGetQuery(con, query)
 
 # Get current data
-query <- "SELECT day_of_week AS label, btu, btu_avg, complete, timestamp, dow FROM gas_usage_dow WHERE dow = date_part('dow', CURRENT_TIMESTAMP);"
+query <- "SELECT day_of_week AS label, dow, btu, btu_avg, complete, timestamp FROM gas_usage_dow WHERE dow = date_part('dow', CURRENT_TIMESTAMP);"
 res1 <- dbGetQuery(con,query)
 
 # create object updatequery as a dummy to skip getting commandArgs in the sourced file below
@@ -24,7 +24,7 @@ res1$btu <- res1$btu + btu
 query <- paste("UPDATE gas_usage_dow SET (btu, timestamp) = (", res1$btu, ", CURRENT_TIMESTAMP) WHERE dow = ", res1$dow, ";", sep='')
 dbGetQuery(con,query)
 
-res <- rbind(res, res1[1,1:4])
+res <- rbind(res, res1[1,1:5])
 
 
 fname <- '/var/www/electricity/ng_dow.png'
