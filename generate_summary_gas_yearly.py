@@ -23,7 +23,7 @@ else:
     complete = 'no'
 
 # Compute the period metrics. For now, do the calculation on the entire record. Maybe in the future, we'll trust the incremental updates.
-#query = """UPDATE electricity_usage_yearly SET (kwh, complete, timestamp) = ((SELECT SUM((watts_ch1 + watts_ch2) * tdiff / 60 / 60 / 1000.) AS kwh FROM electricity_measurements WHERE date_part('year', measurement_time) = %s), '%s', CURRENT_TIMESTAMP) WHERE year = %s;""" % (year, complete, year)
+#query = """UPDATE electricity_usage_yearly SET (btu, complete, timestamp) = ((SELECT SUM((watts_ch1 + watts_ch2) * tdiff / 60 / 60 / 1000.) AS btu FROM electricity_measurements WHERE date_part('year', measurement_time) = %s), '%s', CURRENT_TIMESTAMP) WHERE year = %s;""" % (year, complete, year)
 query = """SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE date_part('year', measurement_time) = %s AND NOT watts_ch3 IS NULL;""" % (year)
 proc = Popen("""/usr/bin/R --vanilla --slave --args "%s" < /home/jessebishop/scripts/gas_logging/gas_interval_summarizer.R""" % (query), shell=True, stdout=PIPE, stderr=PIPE)
 procout = proc.communicate()

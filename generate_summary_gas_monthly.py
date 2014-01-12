@@ -16,7 +16,7 @@ if opmonth == 12:
     year = year - 1
 
 # Update the current period to be ready for incremental updates to speed up querying
-query = """UPDATE gas_usage_monthly SET (kwh, complete, timestamp) = (0, 'no', '%s 00:00:00') WHERE month = %s;""" % (now.strftime('%Y-%m-%d'), month)
+query = """UPDATE gas_usage_monthly SET (btu, complete, timestamp) = (0, 'no', '%s 00:00:00') WHERE month = %s;""" % (now.strftime('%Y-%m-%d'), month)
 cursor.execute(query)
 db.commit()
 
@@ -30,14 +30,14 @@ else:
     complete = 'no'
 
 # Compute the period metrics. For now, do the calculation on the entire record. Maybe in the future, we'll trust the incremental updates.
-#query = """UPDATE gas_usage_monthly SET kwh = (SELECT SUM((watts_ch1 + watts_ch2) * tdiff / 60 / 60 / 1000.) AS kwh FROM electricity_measurements WHERE date_part('month', measurement_time) = %s AND date_part('year', measurement_time) = %s) WHERE month = %s;""" % (opmonth, year, opmonth)
+#query = """UPDATE gas_usage_monthly SET btu = (SELECT SUM((watts_ch1 + watts_ch2) * tdiff / 60 / 60 / 1000.) AS btu FROM electricity_measurements WHERE date_part('month', measurement_time) = %s AND date_part('year', measurement_time) = %s) WHERE month = %s;""" % (opmonth, year, opmonth)
 query = """SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE date_part('month', measurement_time) = %s AND date_part('year', measurement_time) = %s;""" % (opmonth, year)
 proc = Popen("""/usr/bin/R --vanilla --slave --args "%s" < /home/jessebishop/scripts/gas_logging/gas_interval_summarizer.R""" % (query), shell=True, stdout=PIPE, stderr=PIPE)
 procout = proc.communicate()
 btu = procout[0].split(' ')[1].replace('\n','')
 query = """UPDATE gas_usage_monthly SET btu = %s WHERE month = %s;""" % (btu, opmonth)
 cursor.execute(query)
-#query = """UPDATE gas_usage_monthly SET kwh_avg = (SELECT AVG(kwh) FROM (SELECT SUM((watts_ch1 + watts_ch2) * tdiff / 60 / 60 / 1000.) AS kwh FROM electricity_measurements WHERE date_part('month', measurement_time) = %s GROUP BY date_part('year', measurement_time)) AS x) WHERE month = %s;""" % (opmonth, opmonth)
+#query = """UPDATE gas_usage_monthly SET btu_avg = (SELECT AVG(btu) FROM (SELECT SUM((watts_ch1 + watts_ch2) * tdiff / 60 / 60 / 1000.) AS btu FROM electricity_measurements WHERE date_part('month', measurement_time) = %s GROUP BY date_part('year', measurement_time)) AS x) WHERE month = %s;""" % (opmonth, opmonth)
 #cursor.execute(query)
 query = """UPDATE gas_usage_monthly SET complete = '%s' WHERE month = %s;""" % (complete, opmonth)
 cursor.execute(query)

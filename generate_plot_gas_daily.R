@@ -4,10 +4,29 @@ if (! 'package:RPostgreSQL' %in% search()) {
 }
 
 source('/home/jessebishop/scripts/electricity_logging/barplot.R')
-load('/home/jessebishop/scripts/gas_logging/data-furnace_model.RData')
 
-query <- "SELECT doy AS label, btu, btu_avg, complete FROM gas_usage_doy WHERE timestamp >= CURRENT_TIMESTAMP - interval '29 days' AND NOT timestamp IS NULL ORDER BY timestamp;" 
+# Get historic data
+query <- "SELECT doy AS label, btu, btu_avg, complete FROM gas_usage_doy WHERE timestamp >= CURRENT_TIMESTAMP - interval '29 days' AND NOT timestamp IS NULL AND NOT doy = date_part('doy', CURRENT_TIMESTAMP) ORDER BY timestamp;" 
 res <- dbGetQuery(con, query)
+
+# Get current data
+query <- "SELECT doy AS label, btu, btu_avg, complete, timestamp FROM gas_usage_doy WHERE doy = date_part('doy', CURRENT_TIMESTAMP);"
+res1 <- dbGetQuery(con,query)
+
+# create object updatequery as a dummy to skip getting commandArgs in the sourced file below
+updatequery <- 1
+
+# Summarize the current BTUs
+query <- paste("SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE measurement_time > '", res1$timestamp, "' AND date_part('doy', measurement_time) = ", res1$label, ";", sep='')
+btu <- source('/home/jessebishop/scripts/gas_logging/gas_interval_summarizer.R')$value
+res1$btu <- res1$btu + btu
+
+# Update the current doy
+query <- paste("UPDATE gas_usage_doy SET (btu, timestamp) = (", res1$btu, ", CURRENT_TIMESTAMP) WHERE doy = ", res1$label, ";", sep='')
+dbGetQuery(con,query)
+
+res <- rbind(res, res1[1,1:4])
+
 
 fname <- '/var/www/electricity/ng_daily.png'
 title <- "Furnace BTUs in the Last Month"
