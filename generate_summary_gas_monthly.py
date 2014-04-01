@@ -1,9 +1,17 @@
 #!/usr/bin/python
 
-import datetime, psycopg2
+import ConfigParser, datetime, psycopg2
 from subprocess import Popen, PIPE
 
-db = psycopg2.connect(host='localhost', database='jessebishop',user='jessebishop')
+# Get the db config from our config file
+config = ConfigParser.RawConfigParser()
+config.read('/home/jessebishop/.pyconfig')
+dbhost = config.get('pidb', 'DBHOST')
+dbname = config.get('pidb', 'DBNAME')
+dbuser = config.get('pidb', 'DBUSER')
+
+# Connect to the database
+db = psycopg2.connect(host=dbhost, database=dbname, user=dbuser)
 cursor = db.cursor()
 
 now = datetime.datetime.now()

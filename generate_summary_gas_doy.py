@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import argparse, datetime, psycopg2
+import argparse, ConfigParser, datetime, psycopg2
 from subprocess import Popen, PIPE
 
 # Allow the script to be run on a specific day of the week
@@ -8,7 +8,15 @@ p = argparse.ArgumentParser(prog="generate_summary_doy.py")
 p.add_argument('-date', dest="rundate", required=False, help="The date to run in format 'YYYY-MM-DD'.")
 args = p.parse_args()
 
-db = psycopg2.connect(host='localhost', database='jessebishop',user='jessebishop')
+# Get the db config from our config file
+config = ConfigParser.RawConfigParser()
+config.read('/home/jessebishop/.pyconfig')
+dbhost = config.get('pidb', 'DBHOST')
+dbname = config.get('pidb', 'DBNAME')
+dbuser = config.get('pidb', 'DBUSER')
+
+# Connect to the database
+db = psycopg2.connect(host=dbhost, database=dbname, user=dbuser)
 cursor = db.cursor()
 
 

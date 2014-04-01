@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import argparse, datetime, json, psycopg2, urllib2
+import argparse, ConfigParser, datetime, json, psycopg2, urllib2
 
 p = argparse.ArgumentParser(description='Downloads heating degree days for yesterday and inserts them into the database')
 p.add_argument('-d', '--date', dest='rundate', required=False, help='''Optionally provide a date for data download in the format 'YYYY-MM-DD'.''')
@@ -12,8 +12,12 @@ if args.rundate:
 else:
     opdate = datetime.datetime.now() - datetime.timedelta(1)
 
+# Get the api key from our config file
+config = ConfigParser.RawConfigParser()
+config.read('/home/jessebishop/.pyconfig')
+apikey = config.get('wunderground', 'APIKEY')
+
 # Connect to wunderground and get historical_data
-apikey = 'ee7f65f21cceab3a'
 url = 'http://api.wunderground.com/api/{0}/history_{1}/q/USA/MA/East_Falmouth.json'.format(apikey, opdate.strftime('%Y%m%d'))
 f = urllib2.urlopen(url)
 json_string = f.read()
