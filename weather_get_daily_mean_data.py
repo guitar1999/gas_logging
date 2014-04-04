@@ -2,7 +2,7 @@
 
 import argparse, ConfigParser, datetime, json, psycopg2, urllib2
 
-p = argparse.ArgumentParser(description='Downloads heating degree days for yesterday and inserts them into the database')
+p = argparse.ArgumentParser(description='Downloads mean weather observations for yesterday and inserts them into the database')
 p.add_argument('-d', '--date', dest='rundate', required=False, help='''Optionally provide a date for data download in the format 'YYYY-MM-DD'.''')
 args = p.parse_args()
 
@@ -25,11 +25,17 @@ parsed_json = json.loads(json_string)
 
 # Get the data (more later?)
 hdd = parsed_json['history']['dailysummary'][0]['heatingdegreedays']
+meandewpti = parsed_json['history']['dailysummary'][0]['meandewpti']
+meanpressurei = parsed_json['history']['dailysummary'][0]['meanpressurei']
+meantempi = parsed_json['history']['dailysummary'][0]['meantempi']
+meanvisi = parsed_json['history']['dailysummary'][0]['meanvisi']
+meanwdird = parsed_json['history']['dailysummary'][0]['meanwdird']
+meanwindspdi = parsed_json['history']['dailysummary'][0]['meanwindspdi']
 
 # Stick it in the database
 db = psycopg2.connect(host='localhost', database='jessebishop',user='jessebishop')
 cursor = db.cursor()
-query = """INSERT INTO weather_heat_deg_day (date, hdd) VALUES ('{0}', '{1}');""".format(opdate.date(), hdd)
+query = """INSERT INTO weather_daily_mean_data (date, hdd, mean_dewpoint, mean_pressure, mean_temperature, mean_visibility, mean_wind_direction, mean_wind_speed) VALUES ('{0}', '{1}', {2}, {3}, {4}, {5}, {6}, {7});""".format(opdate.date(), hdd, meandewpti ,meanpressurei ,meantempi ,meanvisi ,meanwdird ,meanwindspdi)
 cursor.execute(query)
 db.commit()
 cursor.close()
