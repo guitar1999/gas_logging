@@ -26,6 +26,12 @@ query <- paste("UPDATE gas_usage_doy SET (btu, timestamp) = (", res1$btu, ", CUR
 dbGetQuery(con,query)
 
 res <- rbind(res, res1[1,1:4])
+res$jday <- res$label
+today <- Sys.Date()
+jday <- format(today, '%j')
+year.this <- format(today, '%Y')
+year.last <- as.numeric(year.this) - 1
+res$label <- format(as.Date(res$label - 1, origin=paste(ifelse(res$label <= jday, year.this, year.last), '-01-01', sep='')), '%b-%d')
 
 
 fname <- '/var/www/electricity/ng_daily.png'
@@ -34,7 +40,7 @@ label.x <- "Hour"
 label.y <- "BTU"
 
 png(filename=fname, width=1024, height=400, units='px', pointsize=12, bg='white')
-barplot(res$btu, names.arg=res$label, col='orange')
+barplot(res$btu, names.arg=res$label, col='orange', las=2)
 dev.off()
 
 system(paste("scp", fname, "web309.webfaction.com:/home/jessebishop/webapps/htdocs/home/frompi/electricity/", sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
