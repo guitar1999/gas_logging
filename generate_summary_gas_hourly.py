@@ -22,7 +22,7 @@ db = psycopg2.connect(host=dbhost, database=dbname, user=dbuser)
 cursor = db.cursor()
 
 if args.runhour:
-    if args.runhour != 23:
+    if args.runhour != '23':
         hour = int(args.runhour) + 1
         now = datetime.datetime.strptime(args.rundate, '%Y-%m-%d')
     else:
