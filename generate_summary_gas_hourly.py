@@ -29,7 +29,7 @@ if args.runhour:
         hour = 0
         now = datetime.datetime.strptime(args.rundate, '%Y-%m-%d') + datetime.timedelta(1)
 else:
-	now = datetime.datetime.now()
+    now = datetime.datetime.now()
     hour = now.hour
 
 if hour == 0:
@@ -73,7 +73,10 @@ cursor.execute(query)
 #cursor.execute(query)
 query = """UPDATE gas_usage_hourly SET complete = '%s' WHERE hour = %s;""" % (complete, ophour)
 cursor.execute(query)
-query = """UPDATE gas_usage_hourly SET timestamp = CURRENT_TIMESTAMP WHERE hour = %s;""" % (ophour)
+if args.rundate:
+    query = """UPDATE gas_usage_hourly SET timestamp = '%s %s:00:01' WHERE hour = %s;""" % (now.strftime('%Y-%m-%d'), hour, ophour)
+else:
+    query = """UPDATE gas_usage_hourly SET timestamp = CURRENT_TIMESTAMP WHERE hour = %s;""" % (ophour)
 cursor.execute(query)
 
 # And finish it off
