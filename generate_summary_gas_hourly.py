@@ -44,9 +44,10 @@ if dow == 7:
     dow = 0
 
 # Now update the current period to be ready for incremental updates to speed up querying
-query = """UPDATE gas_usage_hourly SET (btu, complete, timestamp) = (0, 'no', '%s:00:00') WHERE hour = %s;""" % (now.strftime('%Y-%m-%d %H'), hour)
-cursor.execute(query)
-db.commit()
+if not args.runhour:
+    query = """UPDATE gas_usage_hourly SET (btu, complete, timestamp) = (0, 'no', '%s:00:00') WHERE hour = %s;""" % (now.strftime('%Y-%m-%d %H'), hour)
+    cursor.execute(query)
+    db.commit()
 
 # Check to see if the data are complete
 query = """SELECT max(tdiff) < 300  FROM electricity_measurements WHERE measurement_time > '%s' AND date_part('hour', measurement_time) = %s;""" % (opdate.strftime('%Y-%m-%d'), ophour)
@@ -60,7 +61,10 @@ else:
 
 
 #Compute the period metrics. For now, do the calculation on the entire record. Maybe in the future, we'll trust the incremental updates.
-query = """SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE measurement_time > '%s' AND date_part('hour', measurement_time) = %s;""" % (opdate.strftime('%Y-%m-%d'), ophour)
+if args.runhour:
+    query = """SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE measurement_time > '%s' AND measurement_time <= '%s' AND date_part('hour', measurement_time) = %s;""" % (opdate.strftime('%Y-%m-%d'), opdate.strftime('%Y-%m-%d 23:59:59.999999'), ophour)
+else:
+    query = """SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE measurement_time > '%s' AND date_part('hour', measurement_time) = %s;""" % (opdate.strftime('%Y-%m-%d'), ophour)
 proc = Popen("""/usr/bin/R --vanilla --slave --args "%s" < /home/jessebishop/scripts/gas_logging/gas_interval_summarizer.R""" % (query), shell=True, stdout=PIPE, stderr=PIPE)
 procout = proc.communicate()
 btu = procout[0].split(' ')[1].replace('\n','')
