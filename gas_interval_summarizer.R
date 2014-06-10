@@ -3,6 +3,13 @@ if (! 'package:RPostgreSQL' %in% search()) {
     con <- dbConnect(drv="PostgreSQL", host="127.0.0.1", user="jessebishop", dbname="jessebishop")
 }
 
+statusquery <- "SELECT status FROM furnace_status ORDER BY status_time DESC LIMIT 1;"
+status <- dbGetQuery(con, statusquery)
+
+if (status == "OFF"){
+    print(0)
+} else {
+
 # Load the RData file with the model
 load('/home/jessebishop/scripts/gas_logging/data-furnace_model.RData')
 
@@ -41,3 +48,4 @@ f$btu[f$status == 'on'] <- (f$heatcall[f$status == 'on'] / 100 * 60000) * (f$tdi
 # Sum the BTUs
 btu <- sum(f$btu, na.rm=TRUE)
 print(btu)
+}
