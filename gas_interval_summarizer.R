@@ -6,10 +6,6 @@ if (! 'package:RPostgreSQL' %in% search()) {
 statusquery <- "SELECT status FROM furnace_status ORDER BY status_time DESC LIMIT 1;"
 status <- dbGetQuery(con, statusquery)
 
-if (status == "OFF"){
-    print(0)
-} else {
-
 # Load the RData file with the model
 load('/home/jessebishop/scripts/gas_logging/data-furnace_model.RData')
 
@@ -23,11 +19,11 @@ if (exists('updatequery') == FALSE){
 f <- dbGetQuery(con, query)
 
 # Set a furnace status
-f$status[f$watts < 60] <- 'blower'
-f$status[f$watts < 40] <- 'off'
-f$status[f$tdiff > 600] <- 'unknown'
-f$status[is.na(f$status)] <- 'on'
-f$status[f$watts > 500] <- 'dehumidification'
+f$status[f$watts < 60 & f$status == "ON"] <- 'blower'
+f$status[f$watts < 40 & f$status == "ON"] <- 'off'
+f$status[f$tdiff > 600 & f$status == "ON"] <- 'unknown'
+#f$status[is.na(f$status)] <- 'on'
+f$status[f$watts > 500 & f$status == "ON"] <- 'dehumidification'
 
 # Set watts = 0 where watts is NA
 f$watts[is.na(f$watts) == TRUE] <- 0
@@ -40,12 +36,11 @@ f$heatcall[f$heatcall < 40] <- 40
 f$heatcall[f$heatcall > 100] <- 100
 
 # Set non-heating records to zero
-f$heatcall[f$status != 'on'] <- 0
+f$heatcall[f$status != 'ON'] <- 0
 
 # Calculate BTUs
-f$btu[f$status == 'on'] <- (f$heatcall[f$status == 'on'] / 100 * 60000) * (f$tdiff[f$status == 'on'] / 60 / 60)
+f$btu[f$status == 'ON'] <- (f$heatcall[f$status == 'ON'] / 100 * 60000) * (f$tdiff[f$status == 'ON'] / 60 / 60)
 
 # Sum the BTUs
 btu <- sum(f$btu, na.rm=TRUE)
 print(btu)
-}
