@@ -18,6 +18,11 @@ if (exists('updatequery') == FALSE){
 # Run the query
 f <- dbGetQuery(con, query)
 
+# A hack until we put get_gas_usage in hourly, dow, and doy!
+if ("get_gas_usage" %in% query){
+    f$status <- "OFF"
+}
+
 # Set a furnace status
 f$status[f$watts < 60 & f$status == "ON"] <- 'blower'
 f$status[f$watts < 40 & f$status == "ON"] <- 'off'
