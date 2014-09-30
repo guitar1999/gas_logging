@@ -19,7 +19,7 @@ if (exists('updatequery') == FALSE){
 f <- dbGetQuery(con, query)
 
 # A hack until we put get_gas_usage in hourly, dow, and doy!
-if ("get_gas_usage" %in% query){
+if (! "get_gas_usage" %in% query){
     f$status <- "OFF"
 }
 
