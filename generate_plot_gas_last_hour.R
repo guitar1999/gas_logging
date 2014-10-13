@@ -12,7 +12,7 @@ res <- dbGetQuery(con, query)
 
 
 # Set a furnace status
-res$status[res$watts < 60] <- 'blower'
+res$status[res$watts < 63] <- 'blower'
 res$status[res$watts < 40] <- 'off'
 res$status[res$tdiff > 3600] <- 'unknown'
 res$status[is.na(res$status)] <- 'on'
