@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION get_gas_usage(start_date date, end_date date) 
+CREATE OR REPLACE FUNCTION get_gas_usage(start_date timestamp, end_date timestamp) 
 RETURNS TABLE(watts integer, measurement_time timestamp with time zone, tdiff numeric, status text)
 AS $$
 -- Declare an empty variable to hold the initial state of the system
@@ -33,8 +33,8 @@ BEGIN
         LEFT JOIN
             furnace_status f
         ON
-            e.measurement_time = f.status_time
-            --to_timestamp(e.measurement_time::text, 'YYYY-MM-DD HH24:MI') = to_timestamp(f.status_time::text, 'YYYY-MM-DD HH24:MI')
+            --e.measurement_time = f.status_time
+            to_timestamp(e.measurement_time::text, 'YYYY-MM-DD HH24:MI') = to_timestamp(f.status_time::text, 'YYYY-MM-DD HH24:MI')
         WHERE 
             e.measurement_time >= start_date AND
             e.measurement_time < end_date 
