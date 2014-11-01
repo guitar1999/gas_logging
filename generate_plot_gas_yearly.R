@@ -17,7 +17,7 @@ res1 <- dbGetQuery(con,query)
 updatequery <- 1
 
 # Summarize the current BTUs
-query <- paste("SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE measurement_time > '", res1$timestamp, "' AND date_part('year', measurement_time) = ", res1$label, ";", sep='')
+query <- paste("SELECT * FROM get_gas_usage('", res1$timestamp, "', CURRENT_TIMESTAMP::timestamp);", sep='')
 btu <- source('/home/jessebishop/scripts/gas_logging/gas_interval_summarizer.R')$value
 res1$btu <- res1$btu + btu
 
