@@ -61,10 +61,7 @@ else:
 
 
 #Compute the period metrics. For now, do the calculation on the entire record. Maybe in the future, we'll trust the incremental updates.
-if args.runhour:
-    query = """SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE measurement_time > '%s' AND measurement_time <= '%s' AND date_part('hour', measurement_time) = %s;""" % (opdate.strftime('%Y-%m-%d'), opdate.strftime('%Y-%m-%d 23:59:59.999999'), ophour)
-else:
-    query = """SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE measurement_time > '%s' AND date_part('hour', measurement_time) = %s;""" % (opdate.strftime('%Y-%m-%d'), ophour)
+query = """SELECT * FROM get_gas_usage('{0} {1}:00:00', '{2} {3}:00:00');""".format(opdate.strftime('%Y-%m-%d'), ophour, now.strftime('%Y-%m-%d'), hour)
 proc = Popen("""/usr/bin/R --vanilla --slave --args "%s" < /home/jessebishop/scripts/gas_logging/gas_interval_summarizer.R""" % (query), shell=True, stdout=PIPE, stderr=PIPE)
 procout = proc.communicate()
 btu = procout[0].split(' ')[1].replace('\n','')
