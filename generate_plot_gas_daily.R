@@ -40,7 +40,7 @@ label.x <- "Hour"
 label.y <- "BTU"
 
 png(filename=fname, width=1024, height=400, units='px', pointsize=12, bg='white')
-barplot(res$btu, names.arg=res$label, col='orange', las=2)
+barplot(res$btu, names.arg=res$label, col='orange', las=2, main=title, xlab=label.x, ylab=label.y)
 dev.off()
 
 system(paste("scp", fname, "web309.webfaction.com:/home/jessebishop/webapps/htdocs/home/frompi/electricity/", sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)

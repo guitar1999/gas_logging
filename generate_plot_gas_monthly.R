@@ -26,14 +26,15 @@ query <- paste("UPDATE gas_usage_monthly SET (btu, timestamp) = (", res1$btu, ",
 dbGetQuery(con,query)
 
 res <- rbind(res, res1[1,1:4])
+res$btu <- res$btu / 1000000
 
 fname <- '/var/www/electricity/ng_monthly.png'
 title <- "Furnace BTUs Used in the Last Year"
 label.x <- "Month"
-label.y <- "BTU"
+label.y <- "Million BTU"
 
 png(filename=fname, width=1024, height=400, units='px', pointsize=12, bg='white')
-barplot(res$btu, names.arg=res$label, col='orange', las=1)
+barplot(res$btu, names.arg=res$label, col='orange', las=1, main=title, xlab=label.x, ylab=label.y)
 dev.off()
 
 system(paste("scp", fname, "web309.webfaction.com:/home/jessebishop/webapps/htdocs/home/frompi/electricity/", sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
