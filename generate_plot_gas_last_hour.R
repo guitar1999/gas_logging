@@ -4,34 +4,35 @@ if (! 'package:RPostgreSQL' %in% search()) {
 }
 
 # Load the RData file with the model
-load('/home/jessebishop/scripts/gas_logging/data-furnace_model.RData')
+#load('/home/jessebishop/scripts/gas_logging/data-furnace_model.RData')
 
 # Get some data
-query <- "SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE measurement_time > CURRENT_TIMESTAMP - ((date_part('minute', CURRENT_TIMESTAMP) + 60) * interval '1 minute') - (date_part('second', CURRENT_TIMESTAMP) * interval '1 second') ORDER BY measurement_time;"
+#query <- "SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE measurement_time > CURRENT_TIMESTAMP - ((date_part('minute', CURRENT_TIMESTAMP) + 60) * interval '1 minute') - (date_part('second', CURRENT_TIMESTAMP) * interval '1 second') ORDER BY measurement_time;"
+query <- "SELECT *, (heatcall / 100. * 60000)::integer AS btuph FROM furnace_status((CURRENT_TIMESTAMP - ((date_part('minute', CURRENT_TIMESTAMP) + 60) * interval '1 minute') - (date_part('second', CURRENT_TIMESTAMP) * interval '1 second'))::timestamp, CURRENT_TIMESTAMP::timestamp);"
 res <- dbGetQuery(con, query)
 
 
 # Set a furnace status
-res$status[res$watts < 69] <- 'blower'
-res$status[res$watts < 40] <- 'off'
-res$status[res$tdiff > 3600] <- 'unknown'
-res$status[is.na(res$status)] <- 'on'
-res$status[res$watts > 500] <- 'dehumidification'
+#res$status[res$watts < 69] <- 'blower'
+#res$status[res$watts < 40] <- 'off'
+#res$status[res$tdiff > 3600] <- 'unknown'
+#res$status[is.na(res$status)] <- 'on'
+#res$status[res$watts > 500] <- 'dehumidification'
 
 # Now predict on the data
-res$heatcall <- predict(m, res)
+#res$heatcall <- predict(m, res)
 
 # Clean up bad values (a better training dataset will help here)
-res$heatcall[res$heatcall < 40] <- 40
-res$heatcall[res$heatcall > 100] <- 100
+#res$heatcall[res$heatcall < 40] <- 40
+#res$heatcall[res$heatcall > 100] <- 100
 
 # Set non-heating records to zero
-res$heatcall[res$status != 'on'] <- 0
+#res$heatcall[res$status != 'on'] <- 0
 
 # Calculate BTUs
-res$btu[res$status == 'on'] <- (res$heatcall[res$status == 'on'] / 100 * 60000) * (res$tdiff[res$status == 'on'] / 60 / 60)
-res$btu[res$status != 'on'] <- 0
-res$btuph <- res$heatcall / 100 * 60000
+#res$btu[res$status == 'on'] <- (res$heatcall[res$status == 'on'] / 100 * 60000) * (res$tdiff[res$status == 'on'] / 60 / 60)
+#res$btu[res$status != 'on'] <- 0
+#res$btuph <- res$heatcall / 100 * 60000
 
 fname <- '/var/www/electricity/ng_last_hours.png'
 
@@ -49,7 +50,7 @@ res2 <- dbGetQuery(con, query2)
 
 # Plot!
 png(filename=fname, width=1024, height=400, units='px', pointsize=12, bg='white')
-plot(res$measurement_time, res$btuph, type='l', col='white', xlim=c(mintime, mintime + 7200), ylim=c(24000,60000), xlab="Time", ylab="Firing Rate (btu/hour)", main=paste("Natural Gas Usage since ", mintime), xaxt='n', yaxt='n')
+plot(res$measurement_time, res$btuph, type='l', col='white', xlim=c(mintime, mintime + 7200), ylim=c(24000,60000), xlab='', ylab="Firing Rate (btu/hour)", main=paste("Natural Gas Usage since ", mintime), xaxt='n', yaxt='n')
 axis(side=1, at=hseq, labels=substr(hseq, 12, 16))
 axis(side=2, at=vseq, labels=vlab, las=1)
 abline(v=mintime + 3600, col='black')

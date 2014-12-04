@@ -30,12 +30,12 @@ res <- rbind(res, res1[1,1:3])
 res$btu <- res$btu / 1000000
 
 fname <- '/var/www/electricity/ng_yearly.png'
-title <- "Electricity Usage By Year"
+title <- "Furnace BTUs By Year"
 label.x <- "Year"
 label.y <- "Million BTU"
 
 png(filename=fname, width=1024, height=400, units='px', pointsize=12, bg='white')
-barplot(res$btu, names.arg=res$label, col='orange', las=1, main=title, xlab=label.x, ylab=label.y)
+barplot(res$btu, names.arg=res$label, col='orange', las=1, main=title, ylab=label.y)
 #bp(res, title, label.x, label.y)
 dev.off()
 

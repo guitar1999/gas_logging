@@ -33,14 +33,15 @@ year.this <- format(today, '%Y')
 year.last <- as.numeric(year.this) - 1
 res$label <- format(as.Date(res$label - 1, origin=paste(ifelse(res$label <= jday, year.this, year.last), '-01-01', sep='')), '%b-%d')
 
+res$btu <- res$btu / 1000
 
 fname <- '/var/www/electricity/ng_daily.png'
 title <- "Furnace BTUs in the Last Month"
-label.x <- "Hour"
-label.y <- "BTU"
+#label.x <- "Hour"
+label.y <- "Thousand BTU"
 
 png(filename=fname, width=1024, height=400, units='px', pointsize=12, bg='white')
-barplot(res$btu, names.arg=res$label, col='orange', las=2, main=title, xlab=label.x, ylab=label.y)
+barplot(res$btu, names.arg=res$label, col='orange', las=2, main=title, ylab=label.y)
 dev.off()
 
 system(paste("scp", fname, "web309.webfaction.com:/home/jessebishop/webapps/htdocs/home/frompi/electricity/", sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
