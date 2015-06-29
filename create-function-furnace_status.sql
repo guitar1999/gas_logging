@@ -141,4 +141,4 @@ BEGIN
         FROM
             heatcall_query h;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql IMMUTABLE;
