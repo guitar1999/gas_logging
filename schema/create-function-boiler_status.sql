@@ -102,8 +102,11 @@ BEGIN
             e2.measurement_time,
             e2.tdiff, 
             e2.status AS main_status, 
-            e2.status2 AS system_status, 
-            (140000 * e2.tdiff / 60 / 60)::numeric AS btu, 
+            e2.status2 AS system_status,
+            CASE
+                WHEN system_status = 'boiler and circulator' THEN ROUND((140000 * e2.tdiff / 60 / 60), 0)::numeric
+                ELSE 0::numeric
+            END AS btu, 
             e2.event_group::integer AS event_group
         FROM
             event_group2_query e2;
