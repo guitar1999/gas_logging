@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION boiler_status(start_date timestamp, end_date timestamp) 
-RETURNS TABLE(watts integer, measurement_time timestamp with time zone, tdiff numeric, main_status text, system_status text, heatcall integer, btu numeric, event_group integer)
+RETURNS TABLE(watts integer, measurement_time timestamp with time zone, tdiff numeric, main_status text, system_status text, btu numeric, event_group integer)
 AS $$
 -- Declare an empty variable to hold the initial state of the system
 DECLARE
