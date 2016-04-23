@@ -92,7 +92,7 @@ BEGIN
             e.status,
             e.status2,
             CASE
-                WHEN e.status2 IN ('boiler and circulator', 'circulator') THEN NULL 
+                WHEN NOT e.status2 IN ('boiler and circulator', 'circulator') THEN NULL 
                 ELSE sum(CASE WHEN e.event_group IS NULL THEN 0 ELSE 1 END) OVER (ORDER BY e.measurement_time)
             END AS event_group
         FROM event_group_query e
