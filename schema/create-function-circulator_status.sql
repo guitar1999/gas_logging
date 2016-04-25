@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION boiler_status(start_date timestamp, end_date timestamp) 
+CREATE OR REPLACE FUNCTION circulator_status(start_date timestamp, end_date timestamp) 
 RETURNS TABLE(watts integer, measurement_time timestamp with time zone, tdiff numeric, main_status text, system_status text, btu numeric, event_group integer)
 AS $$
 -- Declare an empty variable to hold the initial state of the system
@@ -64,8 +64,8 @@ BEGIN
             s.status,
             CASE 
                 WHEN s.status = 'ON' AND s.watts < 50 THEN 'main power'
-                --WHEN s.status = 'ON' AND s.watts >= 50 AND s.watts < 200 THEN 'circulator'
-                WHEN s.status = 'ON' AND s.watts >= 200 THEN 'boiler'
+                WHEN s.status = 'ON' AND s.watts >= 50 AND s.watts < 200 THEN 'circulator'
+                -- WHEN s.status = 'ON' AND s.watts >= 200 THEN 'boiler and circulator'
                 WHEN s.status = 'OFF' THEN 'OFF'
             END AS status2
         FROM 
@@ -78,9 +78,9 @@ BEGIN
             s2.status,
             s2.status2,
             CASE 
-                WHEN NOT s2.status2 = 'boiler' THEN NULL
-                WHEN s2.status2 = 'boiler' AND NOT LAG(s2.status2) OVER (ORDER BY s2.measurement_time) = 'boiler' THEN date_part('epoch', s2.measurement_time)
-                WHEN s2.status2 = 'boiler' AND LAG(s2.status2) OVER (ORDER BY s2.measurement_time) = 'boiler' THEN NULL
+                WHEN NOT s2.status2 = 'circulator' THEN NULL
+                WHEN s2.status2 = 'circulator' AND NOT LAG(s2.status2) OVER (ORDER BY s2.measurement_time) = 'circulator' THEN date_part('epoch', s2.measurement_time)
+                WHEN s2.status2 = 'circulator' AND LAG(s2.status2) OVER (ORDER BY s2.measurement_time) = 'circulator' THEN NULL
             END AS event_group 
         FROM 
             status2_query AS s2
@@ -92,7 +92,7 @@ BEGIN
             e.status,
             e.status2,
             CASE
-                WHEN NOT e.status2 IN ('boiler', 'circulator') THEN NULL 
+                WHEN NOT e.status2 IN ('circulator') THEN NULL 
                 ELSE sum(CASE WHEN e.event_group IS NULL THEN 0 ELSE 1 END) OVER (ORDER BY e.measurement_time)
             END AS event_group
         FROM event_group_query e
