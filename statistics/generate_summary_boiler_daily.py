@@ -56,7 +56,7 @@ if dstatus == 'ON' or dcount > 0:
     db.commit()
     if not args.rundate:
         # Get the weather info
-        query = """SELECT mean_dewpoint, mean_temperature FROM weather_daily_mean_data WHERE date = (CURRENT_TIMESTAMP - interval '1 day')::date;"""
+        query = """SELECT mean_dewpoint, mean_temperature FROM weather_daily_mean_data WHERE weather_date = (CURRENT_TIMESTAMP - interval '1 day')::date;"""
         cursor.execute(query)
         data = cursor.fetchall()
         dew, t = data[0]
