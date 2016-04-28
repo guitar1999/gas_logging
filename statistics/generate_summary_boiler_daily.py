@@ -60,7 +60,7 @@ if dstatus == 'ON' or dcount > 0:
         dew, t = data[0]
 
         # Tweet!
-        status = """Boiler: total runtime {0}h, {1} cycles, mean of {2} min/cycle. Circulator: total runtime {3}h, {4} cycles, mean of {5} min/cycle.""".format(round(total_boiler_runtime / 60, 1), boiler_cycles, avg_boiler_runtime, round(total_circulator_runtime / 60, 1), circulator_cycles, avg_circulator_runtime)
+        status = """Boiler: {0}h, {1} cycles, mean of {2} min/cycle. Circulator: {3}h, {4} cycles, mean of {5} min/cycle. {6} btu, {7} kwh.""".format(round(total_boiler_runtime / 60, 1), boiler_cycles, avg_boiler_runtime, round(total_circulator_runtime / 60, 1), circulator_cycles, avg_circulator_runtime, round(btu, 0), round(kwh, 1))
         tweet(status)
 
 # Close database connection
