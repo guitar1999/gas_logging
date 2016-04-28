@@ -14,9 +14,11 @@ config.read('/home/jessebishop/.pyconfig')
 dbhost = config.get('pidb', 'DBHOST')
 dbname = config.get('pidb', 'DBNAME')
 dbuser = config.get('pidb', 'DBUSER')
+dbport = config.get('pidb', 'DBPORT')
+
 
 # Connect to the database
-db = psycopg2.connect(host=dbhost, database=dbname, user=dbuser)
+db = psycopg2.connect(host=dbhost, port=dbport, database=dbname, user=dbuser)
 cursor = db.cursor()
 
 # Set rundate
@@ -38,13 +40,18 @@ dcount = cursor.fetchall()[0][0]
 
 # If the system is on, or if it had a state change today, then run the analysis
 if dstatus == 'ON' or dcount > 0:
-    # Current hack query to get boiler runtime. This will need to be adjusted once the system
-    # is plumbed to the air handler or the heat is running at the same time.
-    query = """WITH system_stats AS (SELECT event_group, system_status, SUM(tdiff) / 60 AS runtime, SUM(btu) AS btu, SUM(watts * tdiff / 1000 / 60 / 60) AS kwh FROM boiler_status({0}, {1}) GROUP BY event_group, system_status), system_stats_circulator AS (SELECT event_group, 'circulator2'::TEXT AS system_status, SUM(runtime) AS runtime, 0 AS btu, 0 AS kwh FROM system_stats WHERE system_status IN ('boiler and circulator', 'circulator') GROUP BY event_group) INSERT INTO oil_statistics.boiler_daily_statistics (date, btu, kwh, cycles, total_boiler_runtime, avg_boiler_runtime, min_boiler_runtime, max_boiler_runtime, total_circulator_runtime, avg_circulator_runtime, min_circulator_runtime, max_circulator_runtime, updated) SELECT '2016-04-22 00:00:00'::DATE, SUM(btu) AS total_btu, ROUND(SUM(kwh), 2) AS total_kwh, COUNT(DISTINCT event_group) AS cycles, ROUND(SUM(CASE WHEN system_status = 'boiler and circulator' THEN runtime END), 2) AS total_boiler_runtime, ROUND(AVG(CASE WHEN system_status = 'boiler and circulator' THEN runtime END), 2) AS avg_boiler_runtime, ROUND(MIN(CASE WHEN system_status = 'boiler and circulator' THEN runtime END), 2) AS min_boiler_runtime, ROUND(MAX(CASE WHEN system_status = 'boiler and circulator' THEN runtime END), 2) AS max_boiler_runtime, ROUND(SUM(CASE WHEN system_status = 'circulator2' THEN runtime END), 2) AS total_circulator_runtime, ROUND(AVG(CASE WHEN system_status = 'circulator2' THEN runtime END), 2) AS avg_circulator_runtime, ROUND(MIN(CASE WHEN system_status = 'circulator2' THEN runtime END), 2) AS min_circulator_runtime, ROUND(MAX(CASE WHEN system_status = 'circulator2' THEN runtime END), 2) AS max_circulator_runtime, CURRENT_TIMESTAMP FROM (SELECT * FROM system_stats UNION SELECT * FROM system_stats_circulator) AS x RETURNING btu, kwh, cycles, total_boiler_runtime, avg_boiler_runtime, min_boiler_runtime, max_boiler_runtime, total_circulator_runtime, avg_circulator_runtime, min_circulator_runtime, max_circulator_runtime;""".format(opdate.strftime('%Y-%m-%d'), now.strftime('%Y-%m-%d'))
+    # Boiler info
+    query = """SELECT ROUND(btu, 2) AS btu, ROUND(kwh, 2) AS kwh, boiler_cycles, ROUND(total_boiler_runtime, 2) AS total_boiler_runtime, ROUND(avg_boiler_runtime, 2) AS avg_boiler_runtime, ROUND(min_boiler_runtime, 2) AS min_boiler_runtime, ROUND(max_boiler_runtime, 2) AS max_boiler_runtime FROM boiler_summary('{0} 00:00:00', '{0} 23:59:59')""".format(opdate.strftime('%Y-%m-%d'))
     cursor.execute(query)
-    db.commit()
     data = cursor.fetchall()
-    btu, kwh, cycles, total_boiler_runtime, avg_boiler_runtime, min_boiler_runtime, max_boiler_runtime, total_circulator_runtime, avg_circulator_runtime, min_circulator_runtime, max_circulator_runtime = data[0]
+    btu, kwh, boiler_cycles, total_boiler_runtime, avg_boiler_runtime, min_boiler_runtime, max_boiler_runtime = data[0]
+    # Circulator info
+    query = """SELECT circulator_cycles, ROUND(total_circulator_runtime, 2) AS total_circulator_runtime, ROUND(avg_circulator_runtime, 2) AS avg_circulator_runtime, ROUND(min_circulator_runtime, 2) AS min_circulator_runtime, ROUND(max_circulator_runtime, 2) AS max_circulator_runtime FROM circulator_summary('{0} 00:00:00', '{0} 23:59:59')""".format(opdate.strftime('%Y-%m-%d'))
+    cursor.execute(query)
+    data = cursor.fetchall()
+    circulator_cycles, total_circulator_runtime, avg_circulator_runtime, min_circulator_runtime, max_circulator_runtime = data[0]
+    # Insert it into the db
+    query = """INSERT INTO boiler_daily_statistics (date, btu, kwh, boiler_cycles, total_boiler_runtime, avg_boiler_runtime, min_boiler_runtime, max_boiler_runtime, circulator_cycles, total_circulator_runtime, avg_circulator_runtime, min_circulator_runtime, max_circulator_runtime, updated) VALUES ('{0}', {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, CURRENT_TIMESTAMP);""".format(opdate.strftime('%Y-%m-%d'), btu, kwh, boiler_cycles, total_boiler_runtime, avg_boiler_runtime, min_boiler_runtime, max_boiler_runtime, circulator_cycles, total_circulator_runtime, avg_circulator_runtime, min_circulator_runtime, max_circulator_runtime)
     if not args.rundate:
         # Get the weather info
         query = """SELECT mean_dewpoint, mean_temperature FROM weather_daily_mean_data WHERE date = (CURRENT_TIMESTAMP - interval '1 day')::date;"""
@@ -53,7 +60,7 @@ if dstatus == 'ON' or dcount > 0:
         dew, t = data[0]
 
         # Tweet!
-        status = """Boiler: total runtime {0} hours, {1} cycles, mean of {2} minutes per cycle. Circulator: total runtime {0} hours,.""".format(runtime, cycles, avg_run, t, dew)
+        status = """Boiler: total runtime {0}h, {1} cycles, mean of {2} min/cycle. Circulator: total runtime {3}h, {4} cycles, mean of {5} min/cycle.""".format(round(total_boiler_runtime / 60, 1), boiler_cycles, avg_boiler_runtime, round(total_circulator_runtime / 60, 1), circulator_cycles, avg_circulator_runtime)
         tweet(status)
 
 # Close database connection
