@@ -52,6 +52,8 @@ if dstatus == 'ON' or dcount > 0:
     circulator_cycles, total_circulator_runtime, avg_circulator_runtime, min_circulator_runtime, max_circulator_runtime = data[0]
     # Insert it into the db
     query = """INSERT INTO boiler_daily_statistics (date, btu, kwh, boiler_cycles, total_boiler_runtime, avg_boiler_runtime, min_boiler_runtime, max_boiler_runtime, circulator_cycles, total_circulator_runtime, avg_circulator_runtime, min_circulator_runtime, max_circulator_runtime, updated) VALUES ('{0}', {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, CURRENT_TIMESTAMP);""".format(opdate.strftime('%Y-%m-%d'), btu, kwh, boiler_cycles, total_boiler_runtime, avg_boiler_runtime, min_boiler_runtime, max_boiler_runtime, circulator_cycles, total_circulator_runtime, avg_circulator_runtime, min_circulator_runtime, max_circulator_runtime)
+    cursor.execute(query)
+    db.commit()
     if not args.rundate:
         # Get the weather info
         query = """SELECT mean_dewpoint, mean_temperature FROM weather_daily_mean_data WHERE date = (CURRENT_TIMESTAMP - interval '1 day')::date;"""
