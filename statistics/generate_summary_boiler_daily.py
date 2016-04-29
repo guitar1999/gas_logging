@@ -56,10 +56,10 @@ if dstatus == 'ON' or dcount > 0:
     db.commit()
     if not args.rundate:
         # Get the weather info
-        query = """SELECT mean_dewpoint, mean_temperature FROM weather_daily_mean_data WHERE weather_date = (CURRENT_TIMESTAMP - interval '1 day')::date;"""
-        cursor.execute(query)
-        data = cursor.fetchall()
-        dew, t = data[0]
+        #query = """SELECT mean_dewpoint, mean_temperature FROM weather_daily_mean_data WHERE weather_date = (CURRENT_TIMESTAMP - interval '1 day')::date;"""
+        #cursor.execute(query)
+        #data = cursor.fetchall()
+        #dew, t = data[0]
 
         # Tweet!
         status = """Boiler: {0}h, {1} cycles, mean of {2} min/cycle. Circulator: {3}h, {4} cycles, mean of {5} min/cycle. {6} btu, {7} kwh.""".format(round(total_boiler_runtime / 60, 1), boiler_cycles, round(avg_boiler_runtime, 1), round(total_circulator_runtime / 60, 1), circulator_cycles, round(avg_circulator_runtime, 1), round(btu, 0), round(kwh, 1))
