@@ -106,11 +106,11 @@ BEGIN
             e2.status AS main_status, 
             e2.status2 AS system_status,
             CASE
-                WHEN e2.status2 = 'boiler' THEN (oil_btu_gal * nozzle_gal_hr * e2.tdiff / 60 / 60)::numeric
+                WHEN e2.status2 = 'boiler' THEN (oil_btu_gal * nozzle_gal_hr * CASE WHEN e2.tdiff > 600 THEN 10 ELSE e2.tdiff END / 60 / 60)::numeric
                 ELSE 0::numeric
             END AS btu,
             CASE
-                WHEN e2.status2 = 'boiler' THEN (nozzle_gal_hr  * e2.tdiff / 60 / 60)::numeric
+                WHEN e2.status2 = 'boiler' THEN (nozzle_gal_hr  * CASE WHEN e2.tdiff > 600 THEN 10 ELSE e2.tdiff END / 60 / 60)::numeric
                 ELSE 0::numeric
             END AS gallons,
             e2.event_group::integer AS event_group
