@@ -37,7 +37,7 @@ BEGIN
             to_timestamp(e.measurement_time::text, 'YYYY-MM-DD HH24:MI') = to_timestamp(f.status_time::text, 'YYYY-MM-DD HH24:MI')
         WHERE 
             e.measurement_time >= start_date AND
-            e.measurement_time < end_date 
+            e.measurement_time <= end_date 
     ), partition_query AS (
         SELECT 
             j.watts, 

@@ -2,6 +2,7 @@ CREATE TABLE oil_statistics.boiler_daily_statistics (
     bds SERIAL NOT NULL PRIMARY KEY,
     date DATE NOT NULL UNIQUE,
     btu numeric,
+    gallon numeric,
     kwh numeric,
     boiler_cycles integer,
     total_boiler_runtime numeric,
@@ -43,5 +44,6 @@ CREATE TABLE oil_statistics.boiler_daily_statistics (
     avg_hot_water_time numeric,
     min_hot_water_time numeric,
     max_hot_water_time numeric,
+    complete text,
     updated timestamp with time zone
 );

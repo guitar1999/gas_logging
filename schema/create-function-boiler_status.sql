@@ -1,11 +1,13 @@
 CREATE OR REPLACE FUNCTION boiler_status(start_date timestamp, end_date timestamp) 
-RETURNS TABLE(watts integer, measurement_time timestamp with time zone, tdiff numeric, main_status text, system_status text, btu numeric, event_group integer)
+RETURNS TABLE(watts integer, measurement_time timestamp with time zone, tdiff numeric, main_status text, system_status text, btu numeric, gallons numeric, event_group integer)
 AS $$
--- Declare an empty variable to hold the initial state of the system
+-- Declare an empty variable to hold the initial state of the system and some constants to be used in calculations.
 DECLARE
 
     initial_state TEXT;
     min_meas_time TIMESTAMP WITH TIME ZONE;
+    oil_btu_gal INTEGER := 140000;
+    nozzle_gal_hr NUMERIC := 0.74;
 
 BEGIN
 
@@ -37,7 +39,7 @@ BEGIN
             to_timestamp(e.measurement_time::text, 'YYYY-MM-DD HH24:MI') = to_timestamp(f.status_time::text, 'YYYY-MM-DD HH24:MI')
         WHERE 
             e.measurement_time >= start_date AND
-            e.measurement_time < end_date 
+            e.measurement_time <= end_date 
     ), partition_query AS (
         SELECT 
             j.watts, 
@@ -104,9 +106,13 @@ BEGIN
             e2.status AS main_status, 
             e2.status2 AS system_status,
             CASE
-                WHEN e2.status2 = 'boiler' THEN ROUND((90000 * e2.tdiff / 60 / 60), 2)::numeric
+                WHEN e2.status2 = 'boiler' THEN (oil_btu_gal * nozzle_gal_hr * e2.tdiff / 60 / 60)::numeric
                 ELSE 0::numeric
-            END AS btu, 
+            END AS btu,
+            CASE
+                WHEN e2.status2 = 'boiler' THEN (nozzle_gal_hr  * e2.tdiff / 60 / 60)::numeric
+                ELSE 0::numeric
+            END AS gallons,
             e2.event_group::integer AS event_group
         FROM
             event_group2_query e2;
