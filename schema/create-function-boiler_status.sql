@@ -104,7 +104,7 @@ BEGIN
             e2.status AS main_status, 
             e2.status2 AS system_status,
             CASE
-                WHEN e2.status2 = 'boiler' THEN ROUND((140000 * e2.tdiff / 60 / 60), 2)::numeric
+                WHEN e2.status2 = 'boiler' THEN ROUND((90000 * e2.tdiff / 60 / 60), 2)::numeric
                 ELSE 0::numeric
             END AS btu, 
             e2.event_group::integer AS event_group
