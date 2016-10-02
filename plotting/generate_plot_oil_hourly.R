@@ -1,6 +1,6 @@
 if (! 'package:RPostgreSQL' %in% search()) {
     library(RPostgreSQL)
-    con <- dbConnect(drv="PostgreSQL", host="127.0.0.1", user="jessebishop", dbname="jessebishop")
+    source('/home/jessebishop/.rconfig.R')
 }
 
 source('/home/jessebishop/scripts/electricity_logging/barplot.R')
