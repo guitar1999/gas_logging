@@ -9,5 +9,5 @@ CREATE TABLE oil_statistics.oil_statistics_doy (
     current_year numeric,
     updated timestamp with time zone
 );
-\copy oil_statistics.oil_statistics_doy (doy_noleap, doy_leap, month, day) FROM 'doy_statistics.data'
+\copy oil_statistics.oil_statistics_doy (doy_noleap, doy_leap, month, day) FROM 'data/doy_statistics.data'
 UPDATE oil_statistics.oil_statistics_doy SET (count, btu_avg, previous_year, current_year, updated) = (0, 0, 0, 0, CURRENT_TIMESTAMP);
