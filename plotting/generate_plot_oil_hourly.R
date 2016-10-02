@@ -6,23 +6,23 @@ if (! 'package:RPostgreSQL' %in% search()) {
 source('/home/jessebishop/scripts/electricity_logging/barplot.R')
 
 # Get historic data
-query <- "SELECT hour AS label, btu, btu_avg, complete FROM gas_usage_hourly WHERE NOT hour = date_part('hour', CURRENT_TIMESTAMP) ORDER BY timestamp;"
+query <- "SELECT u.hour AS label, u.btu, s.btu_avg, u.complete FROM oil_usage_hourly u INNER JOIN oil_statistics_hourly s ON u.hour=s.hour WHERE NOT u.hour = date_part('hour', CURRENT_TIMESTAMP) ORDER BY u.updated;"
 res <- dbGetQuery(con, query)
 
 # Get current data
-query <- "SELECT hour AS label, btu, btu_avg, complete, timestamp FROM gas_usage_hourly WHERE hour = date_part('hour', CURRENT_TIMESTAMP);"
+query <- "SELECT u.hour AS label, u.btu, s.btu_avg, u.complete, u.updated FROM oil_usage_hourly u INNER JOIN oil_statistics_hourly s ON u.hour=s.hour WHERE u.hour = date_part('hour', CURRENT_TIMESTAMP);"
 res1 <- dbGetQuery(con,query)
 
 # create object updatequery as a dummy to skip getting commandArgs in the sourced file below
 updatequery <- 1
 
 # Summarize the current BTUs
-query <- paste("SELECT * FROM get_gas_usage('", res1$timestamp, "', CURRENT_TIMESTAMP::timestamp);", sep='')
-btu <- source('/home/jessebishop/scripts/gas_logging/gas_interval_summarizer.R')$value
-res1$btu <- res1$btu + btu
+query <- paste("SELECT btu, CURRENT_TIMESTAMP AS updated FROM boiler_summary('", res1$updated, "', CURRENT_TIMESTAMP::timestamp);", sep='')
+res2 <- dbGetQuery(con,query)
+res1$btu <- res1$btu + res2$btu
 
 # Update the current hour
-query <- paste("UPDATE gas_usage_hourly SET (btu, timestamp) = (", res1$btu, ", CURRENT_TIMESTAMP) WHERE hour = ", res1$label, ";", sep='')
+query <- paste("UPDATE oil_usage_hourly SET (btu, updated) = (", res1$btu, ",'", res2$updated "') WHERE hour = ", res1$label, ";", sep='')
 dbGetQuery(con,query)
 
 res <- rbind(res, res1[1,1:4])
@@ -49,7 +49,7 @@ if (sethour > currenthour) {
 }
 
 fname <- '/var/www/electricity/ng_hourly.png'
-title <- "Furnace BTUs in the Last Day"
+title <- "Boiler BTUs in the Last Day"
 label.x <- "Hour"
 label.y <- "BTU"
 
