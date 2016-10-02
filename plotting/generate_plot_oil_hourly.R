@@ -3,7 +3,7 @@ if (! 'package:RPostgreSQL' %in% search()) {
     source('/home/jessebishop/.rconfig.R')
 }
 
-source('/home/jessebishop/scripts/electricity_logging/barplot.R')
+source('/usr/local/electricity_logging/barplot.R')
 
 # Get historic data
 query <- "SELECT u.hour AS label, u.btu, s.btu_avg, u.complete FROM oil_usage_hourly u INNER JOIN oil_statistics_hourly s ON u.hour=s.hour WHERE NOT u.hour = date_part('hour', CURRENT_TIMESTAMP) ORDER BY u.updated;"
