@@ -4,4 +4,4 @@ CREATE TABLE oil.oil_usage_hourly (
     complete text CHECK (complete = 'yes' OR complete = 'no'),
     updated timestamp with time zone
 );
-INSERT INTO oil.oil_usage_hourly (hour, kwh, complete, updated) SELECT generate_series(0,23), 0, 'no', CURRENT_TIMESTAMP;
+INSERT INTO oil.oil_usage_hourly (hour, btu, complete, updated) SELECT generate_series(0,23), 0, 'no', CURRENT_TIMESTAMP;
