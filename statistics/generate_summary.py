@@ -250,7 +250,11 @@ now = datetime.datetime.now()
 
 if args.mode == 'hour':
     print 'Hourly'
-    hour, now, ophour, opdate, dow, starttime, endtime, reset = hour_calc(now)
+    if args.rundate and args.runhour:
+        res = hour_calc(now, args.rundate, args.runhour)
+    else:
+        res = hour_calc(now)
+    hour, now, ophour, opdate, dow, starttime, endtime, reset = res
     hour_query(now, opdate, hour, ophour, starttime, endtime, dow)
 elif args.mode == 'day':
     print 'Daily'
