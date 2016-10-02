@@ -19,10 +19,12 @@ updatequery <- 1
 # Summarize the current BTUs
 query <- paste("SELECT btu, CURRENT_TIMESTAMP AS updated FROM boiler_summary('", res1$updated, "', CURRENT_TIMESTAMP::timestamp);", sep='')
 res2 <- dbGetQuery(con,query)
+# Set to zero if NA
+res2$btu[is.na(res2$btu)] <- 0
 res1$btu <- res1$btu + res2$btu
 
 # Update the current hour
-query <- paste("UPDATE oil_usage_hourly SET (btu, updated) = (", res1$btu, ",'", res2$updated "') WHERE hour = ", res1$label, ";", sep='')
+query <- paste("UPDATE oil_usage_hourly SET (btu, updated) = (", res1$btu, ",'", res2$updated, "') WHERE hour = ", res1$label, ";", sep='')
 dbGetQuery(con,query)
 
 res <- rbind(res, res1[1,1:4])
