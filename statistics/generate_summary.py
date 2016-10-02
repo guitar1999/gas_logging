@@ -189,30 +189,26 @@ def day_query(now, nowdow, opdate, dow, endtime, rundate):
         complete = 'yes'
     else:
         complete = 'no'
-    query = """UPDATE oil.oil_usage_dow SET btu = (SELECT SUM((watts_ch1 + watts_ch2) * tdiff / 60 / 60 / 1000.) AS btu FROM electricity.electricity_measurements WHERE measurement_time >= '{0}' AND measurement_time < '{1}'), complete = '{3}', updated = CURRENT_TIMESTAMP WHERE dow = {2} RETURNING btu;""".format(opdate.strftime('%Y-%m-%d'), now.strftime('%Y-%m-%d'), dow, complete)
+    query = """UPDATE oil.oil_usage_dow SET btu = (SELECT btu FROM boiler_summary('{0} 00:00:00','{1} 23:59:59')), complete = '{3}', updated = CURRENT_TIMESTAMP WHERE dow = {2} RETURNING btu;""".format(opdate.strftime('%Y-%m-%d'), now.strftime('%Y-%m-%d'), dow, complete)
     cursor.execute(query)
     btu = cursor.fetchall()[0][0]
     query = """UPDATE oil.oil_usage_doy SET (btu, complete, updated) = ({0}, '{1}', CURRENT_TIMESTAMP) WHERE month = {2} AND day = {3};""".format(btu, complete, opdate.month, opdate.day)
     cursor.execute(query)
     db.commit()
-    query = """WITH old AS (SELECT count, btu_avg, updated FROM oil_statistics.oil_statistics_dow WHERE dow = {0}), new AS (SELECT COUNT(DISTINCT measurement_time::DATE), COALESCE(SUM((watts_ch1 + watts_ch2) * tdiff / 60 / 60 / 1000.), 0) AS btu FROM electricity.electricity_measurements e, old WHERE measurement_time > old.updated AND measurement_time <= '{1}' AND DATE_PART('dow', measurement_time) = {0}) UPDATE oil_statistics.oil_statistics_dow AS e SET (btu_avg, count, updated) = (((old.btu_avg * old.count + new.btu) / (old.count + new.count)), old.count + new.count, CURRENT_TIMESTAMP) FROM old, new WHERE dow = {0} RETURNING e.btu_avg;""".format(dow, endtime)
+    #query = """WITH old AS (SELECT count, btu_avg, updated FROM oil_statistics.oil_statistics_dow WHERE dow = {0}), new AS (SELECT COUNT(DISTINCT measurement_time::DATE), COALESCE(SUM((watts_ch1 + watts_ch2) * tdiff / 60 / 60 / 1000.), 0) AS btu FROM electricity.electricity_measurements e, old WHERE measurement_time > old.updated AND measurement_time <= '{1}' AND DATE_PART('dow', measurement_time) = {0}) UPDATE oil_statistics.oil_statistics_dow AS e SET (btu_avg, count, updated) = (((old.btu_avg * old.count + new.btu) / (old.count + new.count)), old.count + new.count, CURRENT_TIMESTAMP) FROM old, new WHERE dow = {0} RETURNING e.btu_avg;""".format(dow, endtime)
+    query = """WITH old AS (SELECT count, btu_avg, updated FROM oil_statistics.oil_statistics_dow WHERE dow = {0}), UPDATE oil_statistics.oil_statistics_dow AS e SET (btu_avg, count, updated) = (((old.btu_avg * old.count + {1}) / (old.count + 1)), (old.count + 1), CURRENT_TIMESTAMP) FROM old WHERE dow = {0}""".format(dow, btu)
     cursor.execute(query)
     btu_avg_dow = cursor.fetchall()[0][0]
-    query = """WITH old AS (SELECT count, btu_avg, updated, season FROM oil_statistics.oil_statistics_dow_season WHERE dow = {0} AND season = (SELECT season FROM meteorological_season WHERE doy = DATE_PART('doy', '{1}'::DATE))), new AS (SELECT COUNT(DISTINCT measurement_time::DATE), COALESCE(SUM((watts_ch1 + watts_ch2) * tdiff / 60 / 60 / 1000.), 0) AS btu FROM electricity.electricity_measurements e INNER JOIN meteorological_season m ON date_part('doy', measurement_time)=m.doy, old WHERE measurement_time > old.updated AND measurement_time <= '{1}' AND DATE_PART('dow', measurement_time) = {0} AND m.season = old.season) UPDATE oil_statistics.oil_statistics_dow_season AS e SET (btu_avg, count, updated) = (((old.btu_avg * old.count + new.btu) / (old.count + new.count)), old.count + new.count, CURRENT_TIMESTAMP) FROM old, new WHERE dow = {0} AND e.season = old.season RETURNING e.btu_avg;""".format(dow, endtime)
+    #query = """WITH old AS (SELECT count, btu_avg, updated, season FROM oil_statistics.oil_statistics_dow_season WHERE dow = {0} AND season = (SELECT season FROM meteorological_season WHERE doy = DATE_PART('doy', '{1}'::DATE))), new AS (SELECT COUNT(DISTINCT measurement_time::DATE), COALESCE(SUM((watts_ch1 + watts_ch2) * tdiff / 60 / 60 / 1000.), 0) AS btu FROM electricity.electricity_measurements e INNER JOIN meteorological_season m ON date_part('doy', measurement_time)=m.doy, old WHERE measurement_time > old.updated AND measurement_time <= '{1}' AND DATE_PART('dow', measurement_time) = {0} AND m.season = old.season) UPDATE oil_statistics.oil_statistics_dow_season AS e SET (btu_avg, count, updated) = (((old.btu_avg * old.count + new.btu) / (old.count + new.count)), old.count + new.count, CURRENT_TIMESTAMP) FROM old, new WHERE dow = {0} AND e.season = old.season RETURNING e.btu_avg;""".format(dow, endtime)
+    query = """WITH old AS (SELECT count, btu_avg, updated, season FROM oil_statistics.oil_statistics_dow_season WHERE dow = {0} AND season = (SELECT season FROM meteorological_season WHERE doy = DATE_PART('doy', '{1}'::DATE))) UPDATE oil_statistics.oil_statistics_dow_season AS e SET (btu_avg, count, updated) = (((old.btu_avg * old.count + {2}) / (old.count + 1)), old.count + 1, CURRENT_TIMESTAMP) FROM old WHERE dow = {0} AND e.season = old.season""".format(dow, endtime, btu)
     cursor.execute(query)
-    btu_avg_dow_season = cursor.fetchall()[0][0]
-    query = """UPDATE oil_statistics.oil_statistics_doy SET (current_year, btu_avg, count, updated) = ({0}, ({0} + (btu_avg * count)) / (count + 1), count + 1, CURRENT_TIMESTAMP) WHERE month = {1} AND day = {2} RETURNING btu_avg, previous_year;""".format(btu, opdate.month, opdate.day)
+    query = """UPDATE oil_statistics.oil_statistics_doy SET (current_year, btu_avg, count, updated) = ({0}, ({0} + (btu_avg * count)) / (count + 1), count + 1, CURRENT_TIMESTAMP) WHERE month = {1} AND day = {2};""".format(btu, opdate.month, opdate.day)
     cursor.execute(query)
-    btu_avg_doy, previous_year = cursor.fetchall()[0]
     db.commit()
     query = """INSERT INTO oil_statistics.oil_sums_daily (sum_date, btu) VALUES ('{0}', {1});""".format(opdate.strftime('%Y-%m-%d'), btu)
     cursor.execute(query)
     db.commit()
-    query = """INSERT INTO oil_statistics.oil_statistics_daily_minimum (measurement_date, watts) SELECT '{0}'::date, min(watts_ch1 + watts_ch2) AS watts FROM electricity.electricity_measurements WHERE measurement_time >= '{0} 00:00:00' and measurement_time::date = '{0}';""".format(opdate.strftime('%Y-%m-%d'))
-    cursor.execute(query)
-    db.commit()
-    return (btu, btu_avg_dow, btu_avg_dow_season, btu_avg_doy, previous_year)
-
+ 
 def month_query(now, opmonth, year):
     query = """UPDATE oil.oil_usage_monthly SET (btu, complete, updated) = (0, 'no', '{0} 00:00:00') WHERE month = {1};""".format(now.strftime('%Y-%m-%d'), now.month)
     cursor.execute(query)
@@ -258,8 +254,12 @@ if args.mode == 'hour':
     hour_query(now, opdate, hour, ophour, starttime, endtime, dow)
 elif args.mode == 'day':
     print 'Daily'
-    opdate, now, dow, nowdow, starttime, endtime, reset = day_calc(now)
-    print day_query(now, nowdow, opdate, dow, endtime, None)
+    if args.rundate:
+        res = day_calc(now, args.rundate)
+    else:
+        res = day_calc(now)
+    opdate, now, dow, nowdow, starttime, endtime, reset = res
+    day_query(now, nowdow, opdate, dow, endtime, None)
 elif args.mode == 'month':
     print 'Monthly'
     opmonth, month, year, startime, endtime, reset = month_calc(now)
