@@ -19,7 +19,7 @@ res2$btu[is.na(res2$btu)] <- 0
 res1$btu <- res1$btu + res2$btu
 
 # Update the current hour
-query <- paste("UPDATE oil.oil_usage_dow SET (btu, timestamp) = (", res1$btu, ",'", res2$updated, "') WHERE dow = ", res1$dow, ";", sep='')
+query <- paste("UPDATE oil.oil_usage_dow SET (btu, updated) = (", res1$btu, ",'", res2$updated, "') WHERE dow = ", res1$dow, ";", sep='')
 dbGetQuery(con,query)
 
 res <- rbind(res, res1[1,1:5])
