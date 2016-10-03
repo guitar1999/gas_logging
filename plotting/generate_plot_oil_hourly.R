@@ -13,9 +13,6 @@ res <- dbGetQuery(con, query)
 query <- "SELECT u.hour AS label, u.btu, s.btu_avg, u.complete, u.updated FROM oil_usage_hourly u INNER JOIN oil_statistics_hourly s ON u.hour=s.hour WHERE u.hour = date_part('hour', CURRENT_TIMESTAMP);"
 res1 <- dbGetQuery(con,query)
 
-# create object updatequery as a dummy to skip getting commandArgs in the sourced file below
-updatequery <- 1
-
 # Summarize the current BTUs
 query <- paste("SELECT btu, CURRENT_TIMESTAMP AS updated FROM boiler_summary('", res1$updated, "', CURRENT_TIMESTAMP::timestamp);", sep='')
 res2 <- dbGetQuery(con,query)

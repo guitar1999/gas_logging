@@ -1,9 +1,9 @@
 if (! 'package:RPostgreSQL' %in% search()) {
     library(RPostgreSQL)
-    con <- dbConnect(drv="PostgreSQL", host="127.0.0.1", user="jessebishop", dbname="jessebishop")
+    source('/home/jessebishop/.rconfig.R')
 }
 
-source('/home/jessebishop/scripts/electricity_logging/barplot.R')
+source('/usr/local/electricity_logging/plotting/barplot.R')
 
 # Get historic data
 query <- "SELECT doy AS label, btu, btu_avg, complete FROM gas_usage_doy WHERE timestamp >= CURRENT_TIMESTAMP - interval '29 days' AND NOT timestamp IS NULL AND NOT doy = date_part('doy', CURRENT_TIMESTAMP) ORDER BY timestamp;" 
