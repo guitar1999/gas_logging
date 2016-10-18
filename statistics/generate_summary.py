@@ -261,7 +261,11 @@ elif args.mode == 'day':
     day_query(now, nowdow, opdate, dow, endtime, None)
 elif args.mode == 'month':
     print 'Monthly'
-    opmonth, month, year, startime, endtime, reset = month_calc(now)
+    if args.runmonth:
+        res = month_calc(now.rundate)
+    else:
+        res = month_calc(now)
+    opmonth, month, year, startime, endtime, reset = res
     print month_query(now, opmonth, year)
 elif args.mode == 'year':
     print 'Yearly'
