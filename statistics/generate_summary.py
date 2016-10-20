@@ -130,10 +130,11 @@ def year_calc(now, runyear=None):
 def reset_btu():
     pass
 
-def hour_query(now, opdate, hour, ophour, starttime, endtime, dow):
-    query = """UPDATE oil.oil_usage_hourly SET (btu, complete, updated) = (0, 'no', '{0}:00:00') WHERE hour = {1};""".format(now.strftime('%Y-%m-%d %H'), hour)
-    cursor.execute(query)
-    db.commit()
+def hour_query(now, opdate, hour, ophour, starttime, endtime, dow, reset):
+    if reset:
+        query = """UPDATE oil.oil_usage_hourly SET (btu, complete, updated) = (0, 'no', '{0}:00:00') WHERE hour = {1};""".format(now.strftime('%Y-%m-%d %H'), hour)
+        cursor.execute(query)
+        db.commit()
     # Are the data complete
     query = """SELECT 't' = ANY(array_agg(tdiff * (watts_ch1 + watts_ch2) > 0)) FROM electricity.electricity_measurements WHERE measurement_time > '{0}' AND date_part('hour', measurement_time) = {1} AND tdiff >= 300 and tdiff * (watts_ch1 + watts_ch2) > 0;""".format(opdate.strftime('%Y-%m-%d'), ophour)
     cursor.execute(query)
@@ -171,7 +172,7 @@ def hour_query(now, opdate, hour, ophour, starttime, endtime, dow):
         print "Hourly sum already updated."
     db.commit()
 
-def day_query(now, nowdow, opdate, dow, endtime, rundate):
+def day_query(now, nowdow, opdate, dow, endtime, rundate, reset):
     if not rundate:
         query = """UPDATE oil.oil_usage_dow SET (btu, complete, updated) = (0, 'no', '{0} 00:00:00') WHERE dow = {1};""".format(now.strftime('%Y-%m-%d'), nowdow)
         cursor.execute(query)
@@ -208,7 +209,7 @@ def day_query(now, nowdow, opdate, dow, endtime, rundate):
     cursor.execute(query)
     db.commit()
  
-def month_query(now, opmonth, year):
+def month_query(now, opmonth, year, reset):
     query = """UPDATE oil.oil_usage_monthly SET (btu, complete, updated) = (0, 'no', '{0} 00:00:00') WHERE month = {1};""".format(now.strftime('%Y-%m-%d'), now.month)
     cursor.execute(query)
     db.commit()
@@ -250,7 +251,7 @@ if args.mode == 'hour':
     else:
         res = hour_calc(now)
     hour, now, ophour, opdate, dow, starttime, endtime, reset = res
-    hour_query(now, opdate, hour, ophour, starttime, endtime, dow)
+    hour_query(now, opdate, hour, ophour, starttime, endtime, dow, reset)
 elif args.mode == 'day':
     print 'Daily'
     if args.rundate:
@@ -258,7 +259,7 @@ elif args.mode == 'day':
     else:
         res = day_calc(now)
     opdate, now, dow, nowdow, starttime, endtime, reset = res
-    day_query(now, nowdow, opdate, dow, endtime, None)
+    day_query(now, nowdow, opdate, dow, endtime, None, reset)
 elif args.mode == 'month':
     print 'Monthly'
     if args.runmonth:
@@ -266,7 +267,7 @@ elif args.mode == 'month':
     else:
         res = month_calc(now)
     opmonth, month, year, startime, endtime, reset = res
-    print month_query(now, opmonth, year)
+    print month_query(now, opmonth, year, reset)
 elif args.mode == 'year':
     print 'Yearly'
 
