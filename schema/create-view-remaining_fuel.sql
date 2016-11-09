@@ -10,7 +10,7 @@ CREATE OR REPLACE VIEW oil_statistics.remaining_fuel AS (
             fill = true
         ORDER BY 
             fill,
-            delivery_date
+            delivery_date DESC
     ), subsequent_deliveries AS (
         SELECT
             COALESCE(SUM(od.gallons), 0) AS gallons
@@ -21,7 +21,7 @@ CREATE OR REPLACE VIEW oil_statistics.remaining_fuel AS (
             od.delivery_date > lf.delivery_date
     ), usage AS (
         SELECT
-            SUM(bds.gallon) AS gallons_used
+            COALESCE(SUM(bds.gallon), 0) AS gallons_used
         FROM
             oil_statistics.boiler_daily_statistics bds,
             last_fill lf
