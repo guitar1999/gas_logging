@@ -26,7 +26,7 @@ CREATE OR REPLACE VIEW oil_statistics.remaining_fuel AS (
             oil_statistics.boiler_daily_statistics bds,
             last_fill lf
         WHERE
-            bds.date > lf.delivery_date
+            bds.date >= lf.delivery_date
     ), average_usage AS (
         SELECT 
             AVG(gallon) AS avg_gal
