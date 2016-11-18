@@ -6,23 +6,23 @@ if (! 'package:RPostgreSQL' %in% search()) {
 source('/home/jessebishop/scripts/electricity_logging/barplot.R')
 
 # Get historic data
-query <- "SELECT month AS label, btu, btu_avg, complete FROM gas_usage_monthly WHERE NOT month = date_part('month', CURRENT_TIMESTAMP) AND NOT timestamp IS NULL ORDER BY timestamp;"
+query <- "SELECT month AS label, btu, 0::INTEGER AS btu_avg, complete FROM oil_usage_monthly WHERE NOT month = date_part('month', CURRENT_TIMESTAMP) AND NOT updated IS NULL ORDER BY updated;"
 res <- dbGetQuery(con, query)
 
 # Get current data
-query <- "SELECT month AS label, btu, btu_avg, complete, timestamp FROM gas_usage_monthly WHERE month = date_part('month', CURRENT_TIMESTAMP);"
+query <- "SELECT month AS label, btu, 0::INTEGER AS btu_avg, complete, updated FROM oil_usage_monthly WHERE month = date_part('month', CURRENT_TIMESTAMP);"
 res1 <- dbGetQuery(con,query)
 
 # create object updatequery as a dummy to skip getting commandArgs in the sourced file below
 updatequery <- 1
 
 # Summarize the current BTUs
-query <- paste("SELECT * FROM get_gas_usage('", res1$timestamp, "', CURRENT_TIMESTAMP::timestamp);", sep='')
+query <- paste("SELECT * FROM get_oil_usage('", res1$timestamp, "', CURRENT_TIMESTAMP::timestamp);", sep='')
 btu <- source('/home/jessebishop/scripts/gas_logging/gas_interval_summarizer.R')$value
 res1$btu <- res1$btu + btu
 
 # Update the current month
-query <- paste("UPDATE gas_usage_monthly SET (btu, timestamp) = (", res1$btu, ", CURRENT_TIMESTAMP) WHERE month = ", res1$label, ";", sep='')
+query <- paste("UPDATE oil_usage_monthly SET (btu, timestamp) = (", res1$btu, ", CURRENT_TIMESTAMP) WHERE month = ", res1$label, ";", sep='')
 dbGetQuery(con,query)
 
 res <- rbind(res, res1[1,1:4])

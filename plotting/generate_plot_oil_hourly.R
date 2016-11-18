@@ -47,10 +47,12 @@ if (sethour > currenthour) {
     sunset <- res3$sunset
 }
 
+res$btu <- res$btu / 1000
+
 fname <- '/var/www/electricity/ng_hourly.png'
 title <- "Boiler BTUs in the Last Day"
 label.x <- "Hour"
-label.y <- "BTU"
+label.y <- "Thousand BTU"
 
 png(filename=fname, width=1024, height=400, units='px', pointsize=12, bg='white')
 barplot(res$btu, names.arg=res$label, col='orange', las=1, main=title, ylab=label.y)

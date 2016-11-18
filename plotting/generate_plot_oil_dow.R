@@ -29,7 +29,7 @@ res$btu <- res$btu / 1000
 fname <- '/var/www/electricity/ng_dow.png'
 title <- "Boiler BTUs Used in the Last Week"
 label.x <- "Day"
-label.y <- "BTU"
+label.y <- "Thousand BTU"
 
 png(filename=fname, width=1024, height=400, units='px', pointsize=12, bg='white')
 barplot(res$btu, names.arg=res$label, col='orange', las=1, main=title, ylab=label.y)
