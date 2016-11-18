@@ -93,7 +93,7 @@ def month_calc(now, runmonth=None):
     year = now.year
     if runmonth:
         reset = False
-        opmonth = runmonth
+        opmonth = int(runmonth)
         if opmonth == 12:
             month = 1
             year = year - 1
@@ -211,7 +211,7 @@ def day_query(now, nowdow, opdate, dow, endtime, rundate, reset):
  
 def month_query(now, opmonth, year, reset):
     if reset:
-        query = """UPDATE oil.oil_usage_monthly SET (btu, complete, updated) = (0, 'no', '{0} 00:00:00') WHERE month = {1};""".format(now.strftime('%Y-%m-%d'), now.month)
+        query = """UPDATE oil.oil_usage_monthly SET (btu, complete, updated) = (0, 'no', '{2}-{1}-01 00:00:00') WHERE month = {1};""".format(now.strftime('%Y-%m-%d'), now.month, now.year)
         cursor.execute(query)
         db.commit()
     # Are the data complete
@@ -223,7 +223,7 @@ def month_query(now, opmonth, year, reset):
         complete = 'yes'
     else:
         complete = 'no'
-    query = """UPDATE oil.oil_usage_monthly SET btu = (SELECT btu FROM boiler_summary('{0}-{1}-01 00:00:00'::TIMESTAMP,'{0}-{2}-01 00:00:00'::TIMESTAMP - interval '1 day')), complete = '{3}', updated = CURRENT_TIMESTAMP WHERE month = {2} RETURNING btu;""".format(year, opmonth, opmonth + 1, complete)
+    query = """UPDATE oil.oil_usage_monthly SET btu = (SELECT btu FROM boiler_summary('{0}-{1}-01 00:00:00'::TIMESTAMP,'{0}-{2}-01 00:00:00'::TIMESTAMP - interval '1 day')), complete = '{3}', updated = CURRENT_TIMESTAMP WHERE month = {1} RETURNING btu;""".format(year, opmonth, int(opmonth) + 1, complete)
     cursor.execute(query)
     db.commit()
     btu = cursor.fetchall()[0][0]
