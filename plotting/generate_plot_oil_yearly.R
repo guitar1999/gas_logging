@@ -1,28 +1,27 @@
 if (! 'package:RPostgreSQL' %in% search()) {
     library(RPostgreSQL)
-    con <- dbConnect(drv="PostgreSQL", host="127.0.0.1", user="jessebishop", dbname="jessebishop")
+    source('/home/jessebishop/.rconfig.R')
 }
 
-source('/home/jessebishop/scripts/electricity_logging/barplot.R')
+source('/usr/local/electricity_logging/plotting/barplot.R')
 
 # Get historic data
-query <- "SELECT year AS label, btu, complete FROM gas_usage_yearly WHERE NOT year = date_part('year', CURRENT_TIMESTAMP) AND NOT timestamp IS NULL ORDER BY timestamp;"
+query <- "SELECT year AS label, btu, complete FROM oil_usage_yearly WHERE NOT year = date_part('year', CURRENT_TIMESTAMP) AND NOT updated IS NULL ORDER BY updated;"
 res <- dbGetQuery(con, query)
 
 # Get current data
-query <- "SELECT year AS label, btu, complete, timestamp FROM gas_usage_yearly WHERE year = date_part('year', CURRENT_TIMESTAMP);"
+query <- "SELECT year AS label, btu, complete, updated FROM oil_usage_yearly WHERE year = date_part('year', CURRENT_TIMESTAMP);"
 res1 <- dbGetQuery(con,query)
 
-# create object updatequery as a dummy to skip getting commandArgs in the sourced file below
-updatequery <- 1
-
 # Summarize the current BTUs
-query <- paste("SELECT * FROM get_gas_usage('", res1$timestamp, "', CURRENT_TIMESTAMP::timestamp);", sep='')
-btu <- source('/home/jessebishop/scripts/gas_logging/gas_interval_summarizer.R')$value
-res1$btu <- res1$btu + btu
+query <- paste("SELECT btu, CURRENT_TIMESTAMP AS updated FROM boiler_summary('", res1$updated, "', CURRENT_TIMESTAMP::timestamp);", sep='')
+res2 <- dbGetQuery(con,query)
+# Set to zero if NA
+res2$btu[is.na(res2$btu)] <- 0
+res1$btu <- res1$btu + res2$btu
 
 # Update the current year
-query <- paste("UPDATE gas_usage_yearly SET (btu, timestamp) = (", res1$btu, ", CURRENT_TIMESTAMP) WHERE year = ", res1$label, ";", sep='')
+query <- paste("UPDATE oil_usage_yearly SET (btu, updated) = (", res1$btu, ",'", res2$updated, "') WHERE year = ", res1$label, ";", sep='')
 dbGetQuery(con,query)
 
 res <- rbind(res, res1[1,1:3])
