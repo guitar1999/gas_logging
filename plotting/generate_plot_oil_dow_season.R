@@ -10,7 +10,7 @@ res <- dbGetQuery(con, query)
 
 res$btu <- res$btu / 1000
 
-fname <- '/var/www/electricity/ng_dow.png'
+fname <- '/var/www/electricity/ng_dow_season.png'
 title <- "Boiler BTUs Used in the Last Week"
 label.x <- "Day"
 label.y <- "Thousand BTU"
