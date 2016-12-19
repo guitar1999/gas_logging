@@ -9,6 +9,7 @@ query <- "WITH dates AS (SELECT generate_series::DATE AS d FROM generate_series(
 res <- dbGetQuery(con, query)
 
 res$btu <- res$btu / 1000
+res$btu_avg <- res$btu_avg / 1000
 
 fname <- '/var/www/electricity/ng_dow_season.png'
 title <- "Boiler BTUs Used in the Last Week"
