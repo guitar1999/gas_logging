@@ -29,7 +29,7 @@ res <- rbind(res, res1[1,1:3])
 res$btu <- res$btu / 1000000
 
 fname <- '/var/www/electricity/ng_yearly.png'
-title <- "Furnace BTUs By Year"
+title <- "Boiler BTUs By Year"
 label.x <- "Year"
 label.y <- "Million BTU"
 

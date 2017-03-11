@@ -28,7 +28,7 @@ res <- rbind(res, res1[1,1:4])
 res$btu <- res$btu / 1000000
 
 fname <- '/var/www/electricity/ng_monthly.png'
-title <- "Furnace BTUs Used in the Last Year"
+title <- "Boiler BTUs Used in the Last Year"
 label.x <- "Month"
 label.y <- "Million BTU"
 
