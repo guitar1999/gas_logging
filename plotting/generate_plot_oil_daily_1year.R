@@ -22,7 +22,7 @@ title <- "Boiler BTUs in the Last Month"
 #label.x <- "Hour"
 label.y <- "Thousand BTU"
 
-png(filename=fname, width=1024, height=400, units='px', pointsize=12, bg='white')
+png(filename=fname, width=10240, height=400, units='px', pointsize=12, bg='white')
 barplot(res$btu, names.arg=res$label, col='orange', las=2, main=title, ylab=label.y)
 dev.off()
 
