@@ -36,14 +36,14 @@ CREATE OR REPLACE VIEW oil_statistics.remaining_fuel AS (
             date > CURRENT_TIMESTAMP::DATE - interval '7 days'
     ), remaining_fuel AS (
         SELECT 
-            (275.0 + sd.gallons) - u.gallons_used AS remaining_gallons
+            (260.0 + sd.gallons) - u.gallons_used AS remaining_gallons
         FROM
             subsequent_deliveries sd,
             usage u
     )
     SELECT
         rf.remaining_gallons,
-        ROUND(rf.remaining_gallons / 275 * 100, 2) AS tank_level,
+        ROUND(rf.remaining_gallons / 260 * 100, 2) AS tank_level,
         ROUND(rf.remaining_gallons / au.avg_gal, 1) AS remaining_days
     FROM
         remaining_fuel rf,
