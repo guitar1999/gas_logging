@@ -36,4 +36,4 @@ png(filename=fname, width=1024, height=400, units='px', pointsize=12, bg='white'
 barplot(res$btu, names.arg=res$label, col='orange', las=1, main=title, ylab=label.y)
 dev.off()
 
-system(paste("scp", fname, "web309.webfaction.com:/home/jessebishop/webapps/htdocs/home/frompi/electricity/", sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
+system(paste("scp", fname, "207.38.86.222:/home/jessebishop/webapps/htdocs/home/frompi/electricity/", sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
