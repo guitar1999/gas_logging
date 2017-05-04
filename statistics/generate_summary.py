@@ -208,12 +208,19 @@ def day_query(now, nowdow, opdate, dow, endtime, rundate, reset):
     query = """INSERT INTO oil_statistics.oil_sums_daily (sum_date, btu) VALUES ('{0}', {1});""".format(opdate.strftime('%Y-%m-%d'), btu)
     cursor.execute(query)
     db.commit()
- 
+
 def month_query(now, opmonth, year, reset):
     if reset:
         query = """UPDATE oil.oil_usage_monthly SET (btu, complete, updated) = (0, 'no', '{2}-{1}-01 00:00:00') WHERE month = {1};""".format(now.strftime('%Y-%m-%d'), now.month, now.year)
         cursor.execute(query)
         db.commit()
+    # Some end of year calcs
+    if opmonth == 12:
+        endyear = year + 1
+        endmonth = 1
+    else:
+        endyear = year
+        endmonth = opmonth + 1
     # Are the data complete
     query = """SELECT 't' = ANY(array_agg(tdiff * (watts_ch1 + watts_ch2) > 0)) FROM electricity.electricity_measurements WHERE date_part('month', measurement_time) = {0} AND date_part('year', measurement_time) = {1} AND tdiff >= 300 and tdiff * (watts_ch1 + watts_ch2) > 0;""".format(opmonth, year)
     cursor.execute(query)
@@ -223,7 +230,7 @@ def month_query(now, opmonth, year, reset):
         complete = 'yes'
     else:
         complete = 'no'
-    query = """UPDATE oil.oil_usage_monthly SET btu = (SELECT btu FROM boiler_summary('{0}-{1}-01 00:00:00'::TIMESTAMP,'{0}-{2}-01 00:00:00'::TIMESTAMP - interval '1 day')), complete = '{3}', updated = CURRENT_TIMESTAMP WHERE month = {1} RETURNING btu;""".format(year, opmonth, int(opmonth) + 1, complete)
+    query = """UPDATE oil.oil_usage_monthly SET btu = (SELECT btu FROM boiler_summary('{0}-{1}-01 00:00:00'::TIMESTAMP,'{2}-{3}-01 00:00:00'::TIMESTAMP - interval '1 day')), complete = '{4}', updated = CURRENT_TIMESTAMP WHERE month = {1} RETURNING btu;""".format(year, opmonth, endyear, endmonth, complete)
     cursor.execute(query)
     db.commit()
     btu = cursor.fetchall()[0][0]
