@@ -165,7 +165,7 @@ def hour_query(now, opdate, hour, ophour, starttime, endtime, dow, reset):
     query = """WITH old AS (SELECT count, btu_avg, updated, season FROM oil_statistics.oil_statistics_hourly_dow_season WHERE hour = {0} AND dow = {2} AND season = (SELECT season FROM meteorological_season WHERE doy = DATE_PART('doy', '{1}'::DATE))) UPDATE oil_statistics.oil_statistics_hourly_dow_season AS e SET (btu_avg, count, updated) = (((old.btu_avg * old.count + {3}) / (old.count + 1)), old.count + 1, CURRENT_TIMESTAMP) FROM old WHERE hour = {0} AND dow = {2} AND e.season = old.season;""".format(ophour, endtime, dow, btu)
     cursor.execute(query)
     db.commit()
-    query = """INSERT INTO oil_statistics.oil_sums_hourly (sum_date, hour, btu) VALUES ('{0}', {1}, {2});""".format(opdate.strftime('%Y-%m-%d'), ophour, btu)
+    query = """INSERT INTO oil_statistics.oil_sums_hourly (sum_date, hour, btu, runtime) SELECT '{0}', {1}, btu, total_boiler_runtime FROM boiler_summary('{2}', '{3}');""".format(opdate.strftime('%Y-%m-%d'), ophour, starttime, endtime) 
     try:
         cursor.execute(query)
     except:
