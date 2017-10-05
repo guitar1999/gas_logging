@@ -6,25 +6,26 @@ if (! 'package:RPostgreSQL' %in% search()) {
 source('/usr/local/electricity_logging/plotting/barplot.R')
 
 # Get historic data
-query <- "SELECT u.hour AS label, u.btu, s.btu_avg, u.complete FROM oil_usage_hourly u INNER JOIN oil_statistics_hourly s ON u.hour=s.hour WHERE NOT u.hour = date_part('hour', CURRENT_TIMESTAMP) ORDER BY u.updated;"
+# query <- "SELECT u.hour AS label, u.btu, s.btu_avg, u.complete FROM oil_usage_hourly u INNER JOIN oil_statistics_hourly s ON u.hour=s.hour WHERE NOT u.hour = date_part('hour', CURRENT_TIMESTAMP) ORDER BY u.updated;"
+query <- "SELECT label, runtime AS btu, runtime_avg AS btu_avg, complete FROM oil_plotting.oil_hourly_plot_view;"
 res <- dbGetQuery(con, query)
 
 # Get current data
-query <- "SELECT u.hour AS label, u.btu, s.btu_avg, u.complete, u.updated FROM oil_usage_hourly u INNER JOIN oil_statistics_hourly s ON u.hour=s.hour WHERE u.hour = date_part('hour', CURRENT_TIMESTAMP);"
-res1 <- dbGetQuery(con,query)
+# query <- "SELECT u.hour AS label, u.btu, s.btu_avg, u.complete, u.updated FROM oil_usage_hourly u INNER JOIN oil_statistics_hourly s ON u.hour=s.hour WHERE u.hour = date_part('hour', CURRENT_TIMESTAMP);"
+# res1 <- dbGetQuery(con,query)
 
 # Summarize the current BTUs
-query <- paste("SELECT btu, CURRENT_TIMESTAMP AS updated FROM boiler_summary('", res1$updated, "', CURRENT_TIMESTAMP::timestamp);", sep='')
-res2 <- dbGetQuery(con,query)
-# Set to zero if NA
-res2$btu[is.na(res2$btu)] <- 0
-res1$btu <- res1$btu + res2$btu
+# query <- paste("SELECT btu, CURRENT_TIMESTAMP AS updated FROM boiler_summary('", res1$updated, "', CURRENT_TIMESTAMP::timestamp);", sep='')
+# res2 <- dbGetQuery(con,query)
+# # Set to zero if NA
+# res2$btu[is.na(res2$btu)] <- 0
+# res1$btu <- res1$btu + res2$btu
 
 # Update the current hour
-query <- paste("UPDATE oil_usage_hourly SET (btu, updated) = (", res1$btu, ",'", res2$updated, "') WHERE hour = ", res1$label, ";", sep='')
-dbGetQuery(con,query)
+# query <- paste("UPDATE oil_usage_hourly SET (btu, updated) = (", res1$btu, ",'", res2$updated, "') WHERE hour = ", res1$label, ";", sep='')
+# dbGetQuery(con,query)
 
-res <- rbind(res, res1[1,1:4])
+# res <- rbind(res, res1[1,1:4])
 
 # Do some sunrise and sunset calculations
 today <- Sys.Date()
@@ -47,12 +48,12 @@ if (sethour > currenthour) {
     sunset <- res3$sunset
 }
 
-res$btu <- res$btu / 1000
+# res$btu <- res$btu / 1000
 
 fname <- '/var/www/electricity/ng_hourly.png'
-title <- "Boiler BTUs in the Last Day"
+title <- "Boiler Runtime in the Last Day"
 label.x <- "Hour"
-label.y <- "Thousand BTU"
+label.y <- "Runtime (Minutes)"
 
 png(filename=fname, width=1024, height=400, units='px', pointsize=12, bg='white')
 barplot(res$btu, names.arg=res$label, col='orange', las=1, main=title, ylab=label.y)
