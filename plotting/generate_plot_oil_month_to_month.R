@@ -3,7 +3,17 @@ if (! 'package:RPostgreSQL' %in% search()) {
     source('/home/jessebishop/.rconfig.R')
 }
 
-query <- "SELECT DATE_PART('year', sum_date) AS year, DATE_PART('month', sum_date) AS month, DATE_PART('day', sum_date) AS day, hour, (sum_date || ' ' || hour || ':59:59')::timestamp AS timestamp, ((sum_date + ((DATE_PART('year', CURRENT_TIMESTAMP) - DATE_PART('year', sum_date))::integer || ' year')::interval)::date || ' ' || hour || ':59:59')::timestamp AS plotstamp, runtime, SUM(runtime) OVER (PARTITION BY date_part('year', sum_date) ORDER BY date_part('day', sum_date), hour) AS cumulative_runtime FROM oil_statistics.oil_sums_hourly_view WHERE DATE_PART('month', sum_date) = DATE_PART('month', CURRENT_TIMESTAMP) ORDER BY DATE_PART('year', sum_date), DATE_PART('day', sum_date), hour;"
+# Parse args in case we want to run another month
+args = commandArgs(trailingOnly=TRUE)
+if (length(args) == 0) {
+  # We want to run the current month
+  month <- strftime(Sys.time(), format='%m')
+} else {
+  # We want to run a specific month
+  month <- args[1]
+}
+
+query <- paste("SELECT DATE_PART('year', sum_date) AS year, DATE_PART('month', sum_date) AS month, DATE_PART('day', sum_date) AS day, hour, (sum_date || ' ' || hour || ':59:59')::timestamp AS timestamp, ((sum_date + ((DATE_PART('year', CURRENT_TIMESTAMP) - DATE_PART('year', sum_date))::integer || ' year')::interval)::date || ' ' || hour || ':59:59')::timestamp AS plotstamp, runtime, SUM(runtime) OVER (PARTITION BY date_part('year', sum_date) ORDER BY date_part('day', sum_date), hour) AS cumulative_runtime FROM oil_statistics.oil_sums_hourly_view WHERE DATE_PART('month', sum_date) = ", month, " ORDER BY DATE_PART('year', sum_date), DATE_PART('day', sum_date), hour;", sep="")
 measurements <- dbGetQuery(con, query)
 
 #query <- "SELECT DATE_TRUNC('month', CURRENT_TIMESTAMP) AS xmin;"
@@ -26,7 +36,7 @@ runtimeavg <- dbGetQuery(con, query)
 hseq <- seq(min(measurements$plotstamp), max(measurements$plotstamp) + 86400, 86400) - 3599
 
 fname <- '/var/www/electricity/oil_month_to_month.png'
-fname2 <- paste('month_to_month_', strftime(Sys.time(), format='%b'), '.png', sep='')
+fname2 <- paste('month_to_month_', month), '.png', sep='')
 ymax <- max(c(measurements$cumulative_runtime))#, prediction$minute))
 
 png(filename=fname, width=1200, height=500, units='px', pointsize=12, bg='white')
@@ -48,12 +58,27 @@ for (i in seq(1, length(years))){
 # lines(prediction$time, prediction$minute, col='blue4', lty=2)
 # lines(predline, col='darkred', lty=2, lwd=1.5)
 #abline(h=runtimeavg, col='orange')
-leg.txt <- c(years[1], '. . .', years[ghostyears], years[length(years)], "predicted total runtime", "average runtime")
+if (ghostyears == 0) {
+  ghosttext <- ''
+  ghostcolor <- 'white'
+} else if (ghostyears == 1) {
+  ghosttext <- years[1]
+  ghostcolor <- c(ghostcolors[1])
+} else if (ghostyears == 2) {
+  ghosttext <- c(years[1], years[2])
+  ghostcolor <- c(ghostcolors[1], ghostcolors[ghostyears])
+} else {
+  ghosttext <- c(years[1], '. . . ', years[ghostyears])
+  ghostcolor <- c(ghostcolors[1], 'white', ghostcolors[ghostyears])
+}
+leg.txt <- c(ghosttext, years[length(years)], "predicted total runtime", "average runtime")
 leg.lty <- c(1, 1, 1, 1, 2, 1)
-leg.col <- c(ghostcolors[1], 'white', ghostcolors[ghostyears], 'red', 'blue4', 'orange')
+leg.col <- c(ghostcolor, 'red', 'blue4', 'orange')
 legend("bottomright", legend=leg.txt, col=leg.col, lty=leg.lty, inset=0.01)
 dev.off()
 
-system(paste("scp", fname, paste(webhost, ":/home/jessebishop/webapps/htdocs/home/frompi/electricity/", sep=""), sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
+if (month == strftime(Sys.time(), format='%m')) {
+  system(paste("scp", fname, paste(webhost, ":/home/jessebishop/webapps/htdocs/home/frompi/electricity/", sep=""), sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
+}
 system(paste("scp", fname, paste(webhost, ":/home/jessebishop/webapps/htdocs/home/frompi/electricity/", fname2, sep=""), sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
 
