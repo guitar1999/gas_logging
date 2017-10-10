@@ -25,7 +25,7 @@ xmax <- max(measurements$plotstamp)
 pxmin <- max(measurements$timestamp)
 
 
-query <- "SELECT runtime_avg FROM oil_statistics.oil_statistics_monthly_view WHERE month = date_part('month', CURRENT_TIMESTAMP);"
+query <- paste("SELECT runtime_avg FROM oil_statistics.oil_statistics_monthly_view WHERE month = ", month, ";", sep="")
 runtimeavg <- dbGetQuery(con, query)
 
 # query <- "SELECT time, CASE WHEN minuteh IS NULL THEN minute ELSE minuteh END AS minute FROM prediction_test WHERE date_part('year', time) = date_part('year', CURRENT_TIMESTAMP) AND date_part('month', time) = date_part('month', CURRENT_TIMESTAMP) AND minute > 0 ORDER BY time;"
@@ -36,7 +36,7 @@ runtimeavg <- dbGetQuery(con, query)
 hseq <- seq(min(measurements$plotstamp), max(measurements$plotstamp) + 86400, 86400) - 3599
 
 fname <- '/var/www/electricity/oil_month_to_month.png'
-fname2 <- paste('month_to_month_', month, '.png', sep='')
+fname2 <- paste('oil_month_to_month_', month, '.png', sep='')
 ymax <- max(c(measurements$cumulative_runtime))#, prediction$minute))
 
 png(filename=fname, width=1200, height=500, units='px', pointsize=12, bg='white')
