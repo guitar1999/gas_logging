@@ -7,7 +7,7 @@ DECLARE
     initial_state TEXT;
     min_meas_time TIMESTAMP WITH TIME ZONE;
     oil_btu_gal INTEGER := 140000;
-    nozzle_gal_hr NUMERIC := 0.74;
+    nozzle_gal_hr NUMERIC := 0.666205227383988;
 
 BEGIN
 

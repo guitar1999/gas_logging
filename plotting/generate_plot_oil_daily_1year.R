@@ -20,11 +20,12 @@ year.last <- as.numeric(year.this) - 1
 
 fname <- '/var/www/electricity/ng_daily_1year.png'
 title <- "Boiler Runtime in the Last Month"
-#label.x <- "Hour"
+label.x <- ""
 label.y <- "Runtime (Minutes)"
 
 png(filename=fname, width=10240, height=400, units='px', pointsize=12, bg='white')
 barplot(res$btu, names.arg=res$label, col='orange', las=2, main=title, ylab=label.y)
+#bp(res, title, label.x, label.y)
 dev.off()
 
 system(paste("scp", fname, paste(webhost, ":/home/jessebishop/webapps/htdocs/home/frompi/electricity/", sep=""), sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
