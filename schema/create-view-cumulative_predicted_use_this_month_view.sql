@@ -18,7 +18,7 @@ CREATE OR REPLACE VIEW oil_plotting.cumulative_predicted_use_this_month_view AS 
             date < DATE_TRUNC('MONTH', CURRENT_DATE + INTERVAL '1 MONTH')
         ) 
         SELECT 
-            (date || ' 23:59:59')::TIMESTAMP, sum - t.runtime + m.runtime AS runtime 
+            (date || ' 23:59:59')::TIMESTAMP, GREATEST(t.runtime, sum) - t.runtime + m.runtime AS runtime 
         FROM 
             cumulative_sum, 
             today t, 
