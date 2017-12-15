@@ -43,7 +43,7 @@ ymax <- max(c(measurements$cumulative_runtime, prediction$runtime))
 png(filename=fname, width=1200, height=500, units='px', pointsize=12, bg='white')
 # Set up empty plot
 plot(measurements$plotstamp, measurements$cumulative_runtime, type='l', col='white', ylim=c(0,ymax), xlab='', ylab='Cumulative runtime')
-abline(v=hseq, col='lightgrey', lty=2)
+abline(v=hseq, col='lightgrey', lty=3)
 years <- seq(min(measurements$year), max(measurements$year))
 ghostyears <- length(years) - 1
 ghostcolors <- grey.colors(ghostyears,start=0.8, end=0.5)
@@ -56,7 +56,7 @@ for (i in seq(1, length(years))){
     }
     lines(plotdata$plotstamp, plotdata$cumulative_runtime, col=linecolor, lwd=1.5)
 }
-lines(prediction$timestamp, prediction$cumulative_runtime, col='blue4', lty=2)
+lines(prediction$timestamp, prediction$cumulative_runtime, col='blue4', lty=5)
 # lines(predline, col='darkred', lty=2, lwd=1.5)
 #abline(h=runtimeavg, col='orange')
 if (ghostyears == 0) {

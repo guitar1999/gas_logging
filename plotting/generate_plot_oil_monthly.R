@@ -26,13 +26,13 @@ res <- dbGetQuery(con, query)
 # dbGetQuery(con,query)
 
 # res <- rbind(res, res1[1,1:4])
-# res$btu <- res$btu / 1000000
-# res$btu_avg <- res$btu_avg / 1000000
+res$btu <- res$btu / 60
+res$btu_avg <- res$btu_avg / 60
 
 fname <- '/var/www/electricity/ng_monthly.png'
 title <- "Boiler Runtime in the Last Year"
 label.x <- "Month"
-label.y <- "Runtime (Minutes)"
+label.y <- "Runtime (Hours)"
 
 png(filename=fname, width=1024, height=400, units='px', pointsize=12, bg='white')
 #barplot(res$btu, names.arg=res$label, col='orange', las=1, main=title, ylab=label.y)
