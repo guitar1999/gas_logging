@@ -65,7 +65,7 @@ BEGIN
             CASE 
                 WHEN s.status = 'ON' AND s.watts < 50 THEN 'main power'
                 WHEN s.status = 'ON' AND s.watts >= 50 THEN 'circulator'
-                -- WHEN s.status = 'ON' AND s.watts >= 200 THEN 'boiler and circulator'
+                -- WHEN s.status = 'ON' AND s.watts >= 180 THEN 'boiler and circulator'
                 WHEN s.status = 'OFF' THEN 'OFF'
             END AS status2
         FROM 
