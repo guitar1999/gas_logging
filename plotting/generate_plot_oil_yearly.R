@@ -28,6 +28,7 @@ res <- dbGetQuery(con, query)
 # res <- rbind(res, res1[1,1:3])
 
 res$btu <- res$btu / 60
+res$btu_avg <- res$btu_avg / 60
 
 fname <- '/var/www/electricity/ng_yearly.png'
 title <- "Boiler Runtime By Year"
@@ -35,8 +36,9 @@ label.x <- "Year"
 label.y <- "Runtime (Hours)"
 
 png(filename=fname, width=1024, height=400, units='px', pointsize=12, bg='white')
-barplot(res$btu, names.arg=res$label, col='orange', las=1, main=title, ylab=label.y)
-#bp(res, title, label.x, label.y)
+#b <- barplot(res$btu, names.arg=res$label, col='orange', las=1, main=title, ylab=label.y)
+#points(b, res$btu_avg / 60)
+bp(res, title, label.x, label.y)
 dev.off()
 
 system(paste("scp", fname, paste(webhost, ":/home/jessebishop/webapps/htdocs/home/frompi/electricity/", sep=""), sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)

@@ -28,7 +28,8 @@ pymin <- max(measurements$cumulative_runtime[measurements$timestamp == pxmin])
 
 query <- paste("SELECT runtime_avg FROM oil_statistics.oil_statistics_monthly_view WHERE month = ", month, ";", sep="")
 runtimeavg <- dbGetQuery(con, query) / 60
-
+query <- paste("SELECT timestamp, monthly_cum_avg_runtime FROM oil_plotting.oil_cumulative_averages WHERE DATE_PART('MONTH', timestamp) = ", month, " ORDER BY timestamp;", sep="")
+cumruntimeavg <- dbGetQuery(con, query)
 # query <- "SELECT time, CASE WHEN minuteh IS NULL THEN minute ELSE minuteh END AS minute FROM prediction_test WHERE date_part('year', time) = date_part('year', CURRENT_TIMESTAMP) AND date_part('month', time) = date_part('month', CURRENT_TIMESTAMP) AND minute > 0 ORDER BY time;"
 query <- "SELECT timestamp, runtime FROM oil_plotting.cumulative_predicted_use_this_month_view ORDER BY timestamp;"
 prediction <- dbGetQuery(con, query)
@@ -61,6 +62,7 @@ for (i in seq(1, length(years))){
 lines(prediction$timestamp, prediction$cumulative_runtime, col='blue4', lty=5)
 # lines(predline, col='darkred', lty=2, lwd=1.5)
 #abline(h=runtimeavg, col='orange')
+lines(cumruntimeavg$timestamp, cumruntimeavg$monthly_cum_avg_runtime / 60, col='orange')
 if (ghostyears == 0) {
   ghosttext <- ''
   ghostcolor <- 'white'
