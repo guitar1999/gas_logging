@@ -65,9 +65,9 @@ BEGIN
             s.tdiff,
             s.status,
             CASE
-                WHEN s.status = 'ON' AND s.watts < 200 THEN 'main power'
-                --WHEN s.status = 'ON' AND s.watts >= 50 AND s.watts < 200 THEN 'circulator'
-                WHEN s.status = 'ON' AND s.watts >= 200 THEN 'boiler'
+                WHEN s.status = 'ON' AND s.watts < 180 THEN 'main power'
+                --WHEN s.status = 'ON' AND s.watts >= 50 AND s.watts < 180 THEN 'circulator'
+                WHEN s.status = 'ON' AND s.watts >= 180 THEN 'boiler'
                 WHEN s.status = 'OFF' THEN 'OFF'
             END AS status2
         FROM
