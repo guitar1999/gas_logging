@@ -1,10 +1,11 @@
-CREATE OR REPLACE FUNCTION boiler_status(start_date timestamp, end_date timestamp)
-RETURNS TABLE(watts integer, measurement_time timestamp with time zone, tdiff numeric, main_status text, system_status text, btu numeric, gallons numeric, event_group integer)
+CREATE OR REPLACE FUNCTION boiler_status(start_date TIMESTAMP, end_date TIMESTAMP)
+RETURNS TABLE(watts INTEGER, measurement_time TIMESTAMP WITH TIME ZONE, tdiff NUMERIC, main_status TEXT, system_status TEXT, btu NUMERIC, gallons NUMERIC, event_group INTEGER)
 AS $$
 -- Declare an empty variable to hold the initial state of the system and some constants to be used in calculations.
 DECLARE
 
     initial_state TEXT;
+    initial_threshold INTEGER;
     min_meas_time TIMESTAMP WITH TIME ZONE;
     oil_btu_gal INTEGER := 140000;
     nozzle_gal_hr NUMERIC := 0.666205227383988;
@@ -12,14 +13,17 @@ DECLARE
 BEGIN
 
     -- Get the initial state of the system
-    SELECT boiler_status.status INTO initial_state FROM boiler_status WHERE status_time = (SELECT max(status_time) FROM boiler_status WHERE status_time < start_date);
+    SELECT boiler_status.status INTO initial_state FROM boiler_status WHERE status_time = (SELECT MAX(status_time) FROM boiler_status WHERE status_time < start_date);
     -- Replaced below with above
     --WITH state_query AS (
     --  SELECT status AS initial_state FROM boiler_status WHERE status_time = (SELECT max(status_time) FROM boiler_status WHERE status_time < '2014-05-09')
     --),
 
+    -- Get the initial threshold for detecting status
+    SELECT boiler_thresholds.boiler_kwh INTO initial_threshold FROM boiler_thresholds WHERE change_time = (SELECT MAX(change_time) FROM boiler_thresholds WHERE change_time < start_date);
+
     -- Get the minimum measurement_time for the given period
-    SELECT min(electricity_measurements.measurement_time) INTO min_meas_time FROM electricity_measurements WHERE electricity_measurements.measurement_time >= start_date AND electricity_measurements.measurement_time <= end_date;
+    SELECT MIN(electricity_measurements.measurement_time) INTO min_meas_time FROM electricity_measurements WHERE electricity_measurements.measurement_time >= start_date AND electricity_measurements.measurement_time <= end_date;
 
    RETURN QUERY WITH join_query AS (
         SELECT
@@ -29,14 +33,19 @@ BEGIN
             CASE
                 WHEN e.measurement_time = min_meas_time THEN initial_state
                 ELSE f.status
-            END AS status
+            END AS status,
+            CASE
+                WHEN e.measurement_time = min_meas_time THEN initial_threshold
+                ELSE t.boiler_kwh
+            END AS threshold
         FROM
             electricity_measurements e
         LEFT JOIN
             boiler_status f
-        ON
-            --e.measurement_time = f.status_time
-            to_timestamp(e.measurement_time::text, 'YYYY-MM-DD HH24:MI') = to_timestamp(f.status_time::text, 'YYYY-MM-DD HH24:MI')
+            ON TO_TIMESTAMP(e.measurement_time::TEXT, 'YYYY-MM-DD HH24:MI') = TO_TIMESTAMP(f.status_time::TEXT, 'YYYY-MM-DD HH24:MI')
+        LEFT JOIN
+            boiler_thresholds t
+            ON TO_TIMESTAMP(e.measurement_time::TEXT, 'YYYY-MM-DD HH24:MI') = TO_TIMESTAMP(t.change_time::TEXT, 'YYYY-MM-DD HH24:MI')
         WHERE
             e.measurement_time >= start_date AND
             e.measurement_time <= end_date
@@ -46,7 +55,9 @@ BEGIN
             j.measurement_time,
             j.tdiff,
             j.status,
-            sum(CASE WHEN j.status IS NULL THEN 0 ELSE 1 END) OVER (ORDER BY j.measurement_time) AS value_partition
+            j.threshold,
+            SUM(CASE WHEN j.status IS NULL THEN 0 ELSE 1 END) OVER (ORDER BY j.measurement_time) AS value_partition,
+            SUM(CASE WHEN j.threshold IS NULL THEN 0 ELSE 1 END) OVER (ORDER BY j.measurement_time) AS threshold_partition
         FROM
             join_query j
         ORDER BY j.measurement_time ASC
@@ -55,7 +66,8 @@ BEGIN
             p.watts,
             p.measurement_time,
             p.tdiff,
-            first_value(p.status) OVER (partition by value_partition ORDER BY p.measurement_time) AS status
+            FIRST_VALUE(p.status) OVER (PARTITION BY value_partition ORDER BY p.measurement_time) AS status,
+            FIRST_VALUE(p.threshold) OVER (PARTITION BY threshold_partition ORDER BY p.measurement_time) AS threshold
         FROM
             partition_query p
     ), status2_query AS (
@@ -65,9 +77,8 @@ BEGIN
             s.tdiff,
             s.status,
             CASE
-                WHEN s.status = 'ON' AND s.watts < 180 THEN 'main power'
-                --WHEN s.status = 'ON' AND s.watts >= 50 AND s.watts < 180 THEN 'circulator'
-                WHEN s.status = 'ON' AND s.watts >= 180 THEN 'boiler'
+                WHEN s.status = 'ON' AND s.watts < s.threshold THEN 'main power'
+                WHEN s.status = 'ON' AND s.watts >= s.threshold THEN 'boiler'
                 WHEN s.status = 'OFF' THEN 'OFF'
             END AS status2
         FROM
@@ -81,7 +92,7 @@ BEGIN
             s2.status2,
             CASE
                 WHEN NOT s2.status2 = 'boiler' THEN NULL
-                WHEN s2.status2 = 'boiler' AND NOT LAG(s2.status2) OVER (ORDER BY s2.measurement_time) = 'boiler' THEN date_part('epoch', s2.measurement_time)
+                WHEN s2.status2 = 'boiler' AND NOT LAG(s2.status2) OVER (ORDER BY s2.measurement_time) = 'boiler' THEN DATE_PART('EPOCH', s2.measurement_time)
                 WHEN s2.status2 = 'boiler' AND LAG(s2.status2) OVER (ORDER BY s2.measurement_time) = 'boiler' THEN NULL
             END AS event_group
         FROM
@@ -106,14 +117,14 @@ BEGIN
             e2.status AS main_status,
             e2.status2 AS system_status,
             CASE
-                WHEN e2.status2 = 'boiler' THEN (oil_btu_gal * nozzle_gal_hr * CASE WHEN e2.tdiff > 600 THEN 10 ELSE e2.tdiff END / 60 / 60)::numeric
-                ELSE 0::numeric
+                WHEN e2.status2 = 'boiler' THEN (oil_btu_gal * nozzle_gal_hr * CASE WHEN e2.tdiff > 600 THEN 10 ELSE e2.tdiff END / 60 / 60)::NUMERIC
+                ELSE 0::NUMERIC
             END AS btu,
             CASE
-                WHEN e2.status2 = 'boiler' THEN (nozzle_gal_hr  * CASE WHEN e2.tdiff > 600 THEN 10 ELSE e2.tdiff END / 60 / 60)::numeric
-                ELSE 0::numeric
+                WHEN e2.status2 = 'boiler' THEN (nozzle_gal_hr  * CASE WHEN e2.tdiff > 600 THEN 10 ELSE e2.tdiff END / 60 / 60)::NUMERIC
+                ELSE 0::NUMERIC
             END AS gallons,
-            e2.event_group::integer AS event_group
+            e2.event_group::INTEGER AS event_group
         FROM
             event_group2_query e2;
 END;
