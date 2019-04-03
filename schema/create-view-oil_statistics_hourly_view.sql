@@ -7,7 +7,7 @@ CREATE OR REPLACE VIEW oil_statistics.oil_statistics_hourly_view AS (
         count(*) AS count
     FROM
         oil_statistics.oil_sums_hourly_view e INNER JOIN
-        weather_data.meteorological_season m ON date_part('doy', e.sum_date)=m.doy
+        weather_data.heating_season m ON date_part('MONTH', e.sum_date)=m.month
     GROUP BY
         1, 2, 3
     ORDER BY

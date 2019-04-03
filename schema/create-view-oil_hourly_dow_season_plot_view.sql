@@ -33,17 +33,17 @@ CREATE OR REPLACE VIEW oil_plotting.oil_hourly_dow_season_plot_view AS (
                         (SELECT
                             season
                         FROM
-                            meteorological_season
+                            weather_data.heating_season
                         WHERE
-                            doy = date_part('doy', (CURRENT_TIMESTAMP - interval '1 day'))
+                            month = date_part('MONTH', (CURRENT_TIMESTAMP - interval '1 day'))
                         )
                     ELSE
                         (SELECT
                             season
                         FROM
-                            meteorological_season
+                            weather_data.heating_season
                         WHERE
-                            doy = date_part('doy', CURRENT_TIMESTAMP)
+                            month = date_part('MONTH', CURRENT_TIMESTAMP)
                         )
                 END
     GROUP BY
@@ -55,3 +55,4 @@ CREATE OR REPLACE VIEW oil_plotting.oil_hourly_dow_season_plot_view AS (
         u.sum_date,
         u.hour
 );
+

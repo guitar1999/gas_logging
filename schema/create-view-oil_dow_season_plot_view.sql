@@ -26,9 +26,9 @@ CREATE OR REPLACE VIEW oil_plotting.oil_dow_season_plot_view AS (
                 (SELECT
                     season
                 FROM
-                    meteorological_season
+                    weather_data.heating_season
                 WHERE
-                    doy = DATE_PART('doy', u.sum_date)
+                    month = DATE_PART('month', u.sum_date)
                 )
     GROUP BY
         u.sum_date,
