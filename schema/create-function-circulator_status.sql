@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION circulator_status(start_date TIMESTAMP, end_date TIMESTAMP)
-RETURNS TABLE(watts INTEGER, measurement_time TIMESTAMP WITH TIME ZONE, tdiff NUMERIC, main_status TEXT, system_status TEXT, btu NUMERIC, event_group INTEGER)
+RETURNS TABLE(watts NUMERIC, measurement_time TIMESTAMP WITH TIME ZONE, tdiff NUMERIC, main_status TEXT, system_status TEXT, btu NUMERIC, event_group INTEGER)
 AS $$
 -- Declare an empty variable to hold the initial state of the system
 DECLARE
@@ -21,13 +21,13 @@ BEGIN
     SELECT boiler_thresholds.circulator_kwh INTO initial_threshold FROM boiler_thresholds WHERE change_time = (SELECT MAX(change_time) FROM boiler_thresholds WHERE change_time < start_date);
 
     -- Get the minimum measurement_time for the given period
-    SELECT MIN(electricity_measurements.measurement_time) INTO min_meas_time FROM electricity_measurements WHERE electricity_measurements.measurement_time >= start_date AND electricity_measurements.measurement_time <= end_date;
+    SELECT MIN(electricity_measurements.measurement_time) INTO min_meas_time FROM electricity_iotawatt.electricity_measurements WHERE electricity_measurements.measurement_time >= start_date AND electricity_measurements.measurement_time <= end_date;
 
    RETURN QUERY WITH join_query AS (
         SELECT
-            e.watts_ch3 AS watts,
+            e.watts_boiler AS watts,
             e.measurement_time,
-            e.tdiff,
+            EXTRACT('EPOCH' FROM e.measurement_time - LAG(e.measurement_time) OVER (ORDER BY e.measurement_time))::NUMERIC AS tdiff,
             CASE
                 WHEN e.measurement_time = min_meas_time THEN initial_state
                 ELSE f.status
@@ -37,7 +37,7 @@ BEGIN
                 ELSE t.circulator_kwh
             END AS threshold
         FROM
-            electricity_measurements e
+            electricity_iotawatt.electricity_measurements e
         LEFT JOIN
             boiler_status f
             ON TO_TIMESTAMP(e.measurement_time::TEXT, 'YYYY-MM-DD HH24:MI') = TO_TIMESTAMP(f.status_time::TEXT, 'YYYY-MM-DD HH24:MI')
@@ -46,7 +46,8 @@ BEGIN
             ON TO_TIMESTAMP(e.measurement_time::TEXT, 'YYYY-MM-DD HH24:MI') = TO_TIMESTAMP(t.change_time::TEXT, 'YYYY-MM-DD HH24:MI')
         WHERE
             e.measurement_time >= start_date AND
-            e.measurement_time <= end_date
+            e.measurement_time <= end_date AND
+            NOT e.watts_boiler IS NULL
     ), partition_query AS (
         SELECT
             j.watts,
@@ -123,3 +124,4 @@ BEGIN
             event_group2_query e2;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
+
