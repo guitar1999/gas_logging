@@ -85,5 +85,5 @@ dev.off()
 if (month == strftime(Sys.time(), format='%m')) {
   system(paste("scp", fname, paste(webhost, ":/home/jessebishop/webapps/htdocs/home/frompi/electricity/", sep=""), sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
 }
-system(paste("scp", fname, paste(webhost, ":/home/jessebishop/webapps/htdocs/home/frompi/electricity/", fname2, sep=""), sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
+system(paste("scp", fname, paste(paste(webuser, webhost, sep="@"), paste(webpath, 'electricity', sep="/"), sep=":"), sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
 
