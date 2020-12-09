@@ -83,7 +83,6 @@ legend("bottomright", legend=leg.txt, col=leg.col, lty=leg.lty, inset=0.01)
 dev.off()
 
 if (month == strftime(Sys.time(), format='%m')) {
-  system(paste("scp", fname, paste(webhost, ":/home/jessebishop/webapps/htdocs/home/frompi/electricity/", sep=""), sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
+  system(paste("scp", fname, paste(paste(webuser, webhost, sep="@"), paste(webpath, 'electricity', sep="/"), sep=":"), sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
 }
-system(paste("scp", fname, paste(paste(webuser, webhost, sep="@"), paste(webpath, 'electricity', sep="/"), sep=":"), sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
-
+system(paste("scp", fname, paste(paste(webuser, webhost, sep="@"), paste(webpath, 'electricity', fname2, sep="/"), sep=":"), sep=' '),ignore.stdout=TRUE,ignore.stderr=TRUE)
