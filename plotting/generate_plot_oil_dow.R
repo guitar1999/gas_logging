@@ -1,9 +1,9 @@
 if (! 'package:RPostgreSQL' %in% search()) {
     library(RPostgreSQL)
-    source('/home/jessebishop/.rconfig.R')
+    source(paste(Sys.getenv('HOME'), '/.rconfig.R', sep=''))
 }
 
-source('/usr/local/electricity_logging/plotting/barplot.R')
+source(paste(githome, '/electricity_logging/plotting/barplot.R', sep=''))
 
 # query <- "SELECT u.day_of_week AS label, u.dow, u.btu, s.btu_avg, u.complete FROM oil.oil_usage_dow u INNER JOIN oil_statistics.oil_statistics_dow s ON u.dow=s.dow WHERE NOT u.dow = date_part('dow', CURRENT_TIMESTAMP) ORDER BY u.updated;"
 query <- "SELECT label, runtime AS btu, runtime_avg AS btu_avg, complete FROM oil_plotting.oil_dow_plot_view;"
@@ -27,7 +27,7 @@ res <- dbGetQuery(con, query)
 
 # res$btu <- res$btu / 1000
 
-fname <- '/var/www/electricity/ng_dow.png'
+fname <- '/tmp/ng_dow.png'
 title <- "Boiler Runtime in the Last Week"
 label.x <- "Day"
 label.y <- "Runtime ("

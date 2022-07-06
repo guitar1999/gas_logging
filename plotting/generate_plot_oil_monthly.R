@@ -1,9 +1,9 @@
 if (! 'package:RPostgreSQL' %in% search()) {
     library(RPostgreSQL)
-    source('/home/jessebishop/.rconfig.R')
+    source(paste(Sys.getenv('HOME'), '/.rconfig.R', sep=''))
 }
 
-source('/usr/local/electricity_logging/plotting/barplot.R')
+source(paste(githome, '/electricity_logging/plotting/barplot.R', sep=''))
 
 # Get historic data
 # query <- "SELECT u.month AS label, u.btu,s.btu_avg, u.complete FROM oil_usage_monthly u INNER JOIN oil_statistics_monthly s ON u.month=s.month WHERE NOT u.month = date_part('month', CURRENT_TIMESTAMP) AND NOT u.updated IS NULL ORDER BY u.updated;"
@@ -29,7 +29,7 @@ res <- dbGetQuery(con, query)
 res$btu <- res$btu / 60
 res$btu_avg <- res$btu_avg / 60
 
-fname <- '/var/www/electricity/ng_monthly.png'
+fname <- '/tmp/ng_monthly.png'
 title <- "Boiler Runtime in the Last Year"
 label.x <- "Month"
 label.y <- "Runtime (Hours)"

@@ -1,9 +1,9 @@
 if (! 'package:RPostgreSQL' %in% search()) {
     library(RPostgreSQL)
-    source('/home/jessebishop/.rconfig.R')
+    source(paste(Sys.getenv('HOME'), '/.rconfig.R', sep=''))
 }
 
-source('/usr/local/electricity_logging/plotting/barplot.R')
+source(paste(githome, '/electricity_logging/plotting/barplot.R', sep=''))
 
 # Get historic data
 # query <- "SELECT u.hour AS label, u.btu, s.btu_avg, u.complete FROM oil_usage_hourly u INNER JOIN oil_statistics_hourly s ON u.hour=s.hour WHERE NOT u.hour = date_part('hour', CURRENT_TIMESTAMP) ORDER BY u.updated;"
@@ -50,7 +50,7 @@ if (sethour > currenthour) {
 
 # res$btu <- res$btu / 1000
 
-fname <- '/var/www/electricity/ng_hourly.png'
+fname <- '/tmp/ng_hourly.png'
 title <- "Boiler Runtime in the Last Day"
 label.x <- "Hour"
 label.y <- "Runtime (Minutes)"

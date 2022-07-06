@@ -1,9 +1,9 @@
 if (! 'package:RPostgreSQL' %in% search()) {
     library(RPostgreSQL)
-    source('/home/jessebishop/.rconfig.R')
+    source(paste(Sys.getenv('HOME'), '/.rconfig.R', sep=''))
 }
 
-source('/usr/local/electricity_logging/plotting/barplot.R')
+source(paste(githome, '/electricity_logging/plotting/barplot.R', sep=''))
 
 # query <- "SELECT u.hour AS label, u.btu, s.btu_avg, u.complete FROM oil_usage_hourly u INNER JOIN oil_statistics.oil_statistics_hourly_dow_season s ON u.hour=s.hour AND s.dow = CASE WHEN u.hour > date_part('hour', CURRENT_TIMESTAMP) THEN date_part('dow', (CURRENT_TIMESTAMP - interval '1 day')) ELSE date_part('dow', CURRENT_TIMESTAMP) END AND s.season = CASE WHEN u.hour > date_part('hour', CURRENT_TIMESTAMP) THEN (SELECT season FROM meteorological_season WHERE doy = date_part('doy', (CURRENT_TIMESTAMP - interval '1 day'))) ELSE (SELECT season FROM meteorological_season WHERE doy = date_part('doy', CURRENT_TIMESTAMP)) END WHERE NOT u.hour = date_part('hour', CURRENT_TIMESTAMP) ORDER BY u.updated;"
 query <- "SELECT label, runtime AS btu, runtime_avg AS btu_avg, complete FROM oil_plotting.oil_hourly_dow_season_plot_view;"
@@ -38,7 +38,7 @@ if (sethour > currenthour) {
 # res$btu <- res$btu / 1000
 # res$btu_avg <- res$btu_avg / 1000
 
-fname <- '/var/www/electricity/ng_hourly_dow_season.png'
+fname <- '/tmp/ng_hourly_dow_season.png'
 title <- "Boiler Runtime in the Last Day"
 label.x <- "Hour"
 label.y <- "Runtime (Minutes)"

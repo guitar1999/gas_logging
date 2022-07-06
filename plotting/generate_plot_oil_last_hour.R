@@ -34,7 +34,7 @@ res <- dbGetQuery(con, query)
 #res$btu[res$status != 'on'] <- 0
 #res$btuph <- res$heatcall / 100 * 60000
 
-fname <- '/var/www/electricity/ng_last_hours.png'
+fname <- '/tmp/ng_last_hours.png'
 
 # Some help for plotting
 mintime <- min(res$measurement_time)
