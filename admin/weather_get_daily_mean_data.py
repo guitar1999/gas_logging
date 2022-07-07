@@ -1,6 +1,12 @@
 #!/usr/bin/python
 
-import argparse, ConfigParser, datetime, json, psycopg2, urllib2
+import argparse
+import ConfigParser
+import datetime
+import json
+import os
+import psycopg2
+import urllib2
 
 p = argparse.ArgumentParser(description='Downloads mean weather observations for yesterday and inserts them into the database')
 p.add_argument('-d', '--date', dest='rundate', required=False, help='''Optionally provide a date for data download in the format 'YYYY-MM-DD'.''')
@@ -14,7 +20,7 @@ else:
 
 # Get the api key from our config file
 config = ConfigParser.RawConfigParser()
-config.read('/home/jessebishop/.pyconfig')
+config.read(os.environ.get('HOME') + '/.pyconfig')
 apikey = config.get('wunderground', 'APIKEY')
 
 # Connect to wunderground and get historical_data

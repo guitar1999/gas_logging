@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
-import argparse, ConfigParser, datetime, psycopg2
+import argparse
+import ConfigParser
+import datetime
+import os
+import psycopg2
 from tweet import *
 
 # Allow the script to be run on a specific day of the week
@@ -10,7 +14,7 @@ args = p.parse_args()
 
 # Get the db config from our config file
 config = ConfigParser.RawConfigParser()
-config.read('/home/jessebishop/.pyconfig')
+config.read(os.environ.get('HOME') + '/.pyconfig')
 dbhost = config.get('pidb', 'DBHOST')
 dbname = config.get('pidb', 'DBNAME')
 dbuser = config.get('pidb', 'DBUSER')

@@ -18,7 +18,7 @@ res <- dbGetQuery(con, query)
 
 # Summarize the current BTUs
 # query <- paste("SELECT * FROM get_oil_usage('", res1$timestamp, "', CURRENT_TIMESTAMP::timestamp);", sep='')
-# btu <- source('/home/jessebishop/scripts/oil_logging/oil_interval_summarizer.R')$value
+# btu <- source(paste(githome, '/oil_logging/oil_interval_summarizer.R', sep=''))$value
 # res1$btu <- res1$btu + btu
 
 # Update the current doy

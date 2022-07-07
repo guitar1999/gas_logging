@@ -2,12 +2,13 @@ if (! 'package:RPostgreSQL' %in% search()) {
     library(RPostgreSQL)
     con <- dbConnect(drv="PostgreSQL", host="127.0.0.1", user="jessebishop", dbname="jessebishop")
 }
+source(paste(Sys.getenv('HOME'), '/.rconfig.R', sep=''))
 
 statusquery <- "SELECT status FROM furnace_status ORDER BY status_time DESC LIMIT 1;"
 status <- dbGetQuery(con, statusquery)
 
 # Load the RData file with the model
-load('/home/jessebishop/scripts/gas_logging/data-furnace_model.RData')
+load(paste(githome, '/gas_logging/data-furnace_model.RData', sep=''))
 
 # Get the argument(s) if running from commandline
 if (exists('updatequery') == FALSE){

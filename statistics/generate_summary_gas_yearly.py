@@ -1,11 +1,14 @@
 #!/usr/bin/python
 
-import ConfigParser, datetime, psycopg2
+import ConfigParser
+import datetime
+import os
+import psycopg2
 from subprocess import Popen, PIPE
 
 # Get the db config from our config file
 config = ConfigParser.RawConfigParser()
-config.read('/home/jessebishop/.pyconfig')
+config.read(os.environ.get('HOME') + '/.pyconfig')
 dbhost = config.get('pidb', 'DBHOST')
 dbname = config.get('pidb', 'DBNAME')
 dbuser = config.get('pidb', 'DBUSER')
@@ -35,7 +38,7 @@ else:
 #query = """UPDATE electricity_usage_yearly SET (btu, complete, timestamp) = ((SELECT SUM((watts_ch1 + watts_ch2) * tdiff / 60 / 60 / 1000.) AS btu FROM electricity_measurements WHERE date_part('year', measurement_time) = %s), '%s', CURRENT_TIMESTAMP) WHERE year = %s;""" % (opyear, complete, opyear)
 #query = """SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE date_part('year', measurement_time) = %s AND NOT watts_ch3 IS NULL;""" % (opyear)
 query = """SELECT * FROM get_gas_usage('{0}-01-01', '{1}-01-01');""".format(opyear, year)
-proc = Popen("""/usr/bin/R --vanilla --slave --args "%s" < /home/jessebishop/scripts/gas_logging/gas_interval_summarizer.R""" % (query), shell=True, stdout=PIPE, stderr=PIPE)
+proc = Popen("""/usr/bin/R --vanilla --slave --args "%s" < ${HOME}/scripts/gas_logging/gas_interval_summarizer.R""" % (query), shell=True, stdout=PIPE, stderr=PIPE)
 procout = proc.communicate()
 btu = procout[0].split(' ')[1].replace('\n','')
 query = """UPDATE gas_usage_yearly SET (btu, complete, timestamp) = (%s, '%s', CURRENT_TIMESTAMP) WHERE year = %s;""" % (btu, complete, opyear)

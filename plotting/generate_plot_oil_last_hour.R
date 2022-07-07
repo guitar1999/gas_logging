@@ -2,9 +2,10 @@ if (! 'package:RPostgreSQL' %in% search()) {
     library(RPostgreSQL)
     con <- dbConnect(drv="PostgreSQL", host="127.0.0.1", user="jessebishop", dbname="jessebishop")
 }
+source(paste(Sys.getenv('HOME'), '/.rconfig.R', sep=''))
 
 # Load the RData file with the model
-#load('/home/jessebishop/scripts/gas_logging/data-furnace_model.RData')
+#load(paste(githome, '/gas_logging/data-furnace_model.RData', sep=''))
 
 # Get some data
 #query <- "SELECT watts_ch3 AS watts, measurement_time, tdiff FROM electricity_measurements WHERE measurement_time > CURRENT_TIMESTAMP - ((date_part('minute', CURRENT_TIMESTAMP) + 60) * interval '1 minute') - (date_part('second', CURRENT_TIMESTAMP) * interval '1 second') ORDER BY measurement_time;"
