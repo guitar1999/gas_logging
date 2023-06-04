@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
-import argparse, ConfigParser, datetime, psycopg2
+import argparse
+import ConfigParser
+import datetime
+import os
+import psycopg2
 from subprocess import Popen, PIPE
 
 # Allow the script to be run on a specific day of the week
@@ -10,7 +14,7 @@ args = p.parse_args()
 
 # Get the db config from our config file
 config = ConfigParser.RawConfigParser()
-config.read('/home/jessebishop/.pyconfig')
+config.read(os.environ.get('HOME') + '/.pyconfig')
 dbhost = config.get('pidb', 'DBHOST')
 dbname = config.get('pidb', 'DBNAME')
 dbuser = config.get('pidb', 'DBUSER')
@@ -53,7 +57,7 @@ else:
 #Compute the period metrics. For now, do the calculation on the entire record. Maybe in the future, we'll trust the incremental updates.
 #query = """UPDATE gas_usage_doy SET btu = (SELECT SUM((watts_ch1 + watts_ch2) * tdiff / 60 / 60 / 1000.) AS btu FROM electricity_measurements WHERE measurement_time >= '%s' AND measurement_time < '%s') WHERE doy = %s;""" % (opdate.strftime('%Y-%m-%d'), now.strftime('%Y-%m-%d'), doy)
 query = """SELECT * FROM get_gas_usage('{0}', '{1}');""".format(opdate.strftime('%Y-%m-%d'), now.strftime('%Y-%m-%d'))
-proc = Popen("""/usr/bin/R --vanilla --slave --args "%s" < /home/jessebishop/scripts/gas_logging/gas_interval_summarizer.R""" % (query), shell=True, stdout=PIPE, stderr=PIPE)
+proc = Popen("""/usr/bin/R --vanilla --slave --args "%s" < ${HOME}/scripts/gas_logging/gas_interval_summarizer.R""" % (query), shell=True, stdout=PIPE, stderr=PIPE)
 procout = proc.communicate()
 btu = procout[0].split(' ')[1].replace('\n','')
 query = """UPDATE gas_usage_doy SET btu = %s WHERE doy = %s;""" % (btu, doy)
