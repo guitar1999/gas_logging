@@ -11,7 +11,9 @@ $$
             COALESCE(bs.btu, 0),
             COALESCE(bs.total_boiler_runtime, 0)
             FROM boiler_summary( 
-                (DATE_TRUNC('HOUR', NEW.measurement_time) - '1 HOUR'::INTERVAL)::TIMESTAMP, (DATE_TRUNC('HOUR', NEW.measurement_time) - '1 HOUR'::INTERVAL)::TIMESTAMP + '00:59:59'::INTERVAL ) AS bs;
+                (DATE_TRUNC('HOUR', NEW.measurement_time) - '1 HOUR'::INTERVAL)::TIMESTAMP, (DATE_TRUNC('HOUR', NEW.measurement_time) - '1 HOUR'::INTERVAL)::TIMESTAMP + '00:59:59'::INTERVAL ) AS bs
+            ON CONFLICT (sum_date, hour) DO
+            UPDATE SET (btu, runtime) = (EXCLUDED.btu, EXCLUDED.runtime);
             RETURN NEW;
         ELSE
             RETURN NEW;
