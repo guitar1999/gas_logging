@@ -169,7 +169,7 @@ def hour_query(now, opdate, hour, ophour, starttime, endtime, dow, reset):
     try:
         cursor.execute(query)
     except:
-        print "Hourly sum already updated."
+        print("Hourly sum already updated.")
     db.commit()
 
 def day_query(now, nowdow, opdate, dow, endtime, rundate, reset):
@@ -260,7 +260,7 @@ def month_query(now, opmonth, year, reset):
 now = datetime.datetime.now()
 
 if args.mode == 'hour':
-    print 'Hourly'
+    print('Hourly')
     if args.rundate and args.runhour:
         res = hour_calc(now, args.rundate, args.runhour)
     else:
@@ -268,7 +268,7 @@ if args.mode == 'hour':
     hour, now, ophour, opdate, dow, starttime, endtime, reset = res
     hour_query(now, opdate, hour, ophour, starttime, endtime, dow, reset)
 elif args.mode == 'day':
-    print 'Daily'
+    print('Daily')
     if args.rundate:
         res = day_calc(now, args.rundate)
     else:
@@ -276,7 +276,7 @@ elif args.mode == 'day':
     opdate, now, dow, nowdow, starttime, endtime, reset = res
     day_query(now, nowdow, opdate, dow, endtime, None, reset)
 elif args.mode == 'month':
-    print 'Monthly'
+    print('Monthly')
     if args.runmonth:
         res = month_calc(now, args.runmonth)
     else:
@@ -284,7 +284,7 @@ elif args.mode == 'month':
     opmonth, month, year, starttime, endtime, reset = res
     month_query(now, opmonth, year, reset)
 elif args.mode == 'year':
-    print 'Yearly'
+    print('Yearly')
 
 
 

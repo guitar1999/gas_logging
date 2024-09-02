@@ -1,13 +1,12 @@
 #!/usr/bin/python
 
 import argparse
-import ConfigParser
+import configparser
 import datetime
 import json
 import os
 import psycopg2
 import requests
-from tweet import *
 
 # Allow the script to be run on a specific day of the week
 p = argparse.ArgumentParser(prog="generate_summary_boiler_daily.py")
@@ -15,7 +14,7 @@ p.add_argument('-date', dest="rundate", required=False, help="The date to run in
 args = p.parse_args()
 
 # Get the db config from our config file
-config = ConfigParser.RawConfigParser()
+config = configparser.RawConfigParser()
 config.read(os.environ.get('HOME') + '/.pyconfig')
 dbhost = config.get('pidb', 'DBHOST')
 dbname = config.get('pidb', 'DBNAME')
@@ -63,7 +62,6 @@ if dstatus == 'ON' or dcount > 0:
     status = """Boiler: {0}h, {1} cycles, mean of {2} min/cycle. Circulator: {3}h, {4} cycles, mean of {5} min/cycle. {6} btu, {7} gal, {8} kwh.""".format(round(total_boiler_runtime / 60, 1), boiler_cycles, round(avg_boiler_runtime, 1), round(total_circulator_runtime / 60, 1), circulator_cycles, round(avg_circulator_runtime, 1), round(btu, 0), round(gallons, 1), round(kwh, 1))
     if not args.rundate:
         # status = """Boiler: {0}h, {1} cycles, mean of {2} min/cycle. Circulator: {3}h, {4} cycles, mean of {5} min/cycle. {6} btu, {7} kwh.""".format(round(total_boiler_runtime / 60, 1), boiler_cycles, round(avg_boiler_runtime, 1), round(total_circulator_runtime / 60, 1), circulator_cycles, round(avg_circulator_runtime, 1), round(btu, 0), round(kwh, 1))
-        tweet(status)
         headers = {'Content-type': 'application/json'}
         payload = {'text' : '{0}'.format(status), 'link_names' : 1}
         r = requests.post(slackhook, headers=headers, data = json.dumps(payload))
