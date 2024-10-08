@@ -19,14 +19,14 @@ BEGIN
             event_group,
             system_status
         ) SELECT
-            SUM(CASE WHEN cycles.system_status = 'boiler' THEN cycles.btu ELSE 0::NUMERIC END),
-            SUM(CASE WHEN cycles.system_status = 'boiler' THEN cycles.gallons ELSE 0::NUMERIC END),
+            SUM(cycles.btu) FILTER (WHERE cycles.system_status = 'boiler'),
+            SUM(cycles.gallons) FILTER (WHERE cycles.system_status = 'boiler'),
             SUM(cycles.kwh),
-            COUNT(CASE WHEN cycles.system_status = 'boiler' THEN cycles.*  END)::INTEGER,
-            SUM(CASE WHEN cycles.system_status = 'boiler' THEN cycles.runtime ELSE 0::NUMERIC END),
-            AVG(CASE WHEN cycles.system_status = 'boiler' THEN cycles.runtime ELSE 0::NUMERIC END),
-            MIN(CASE WHEN cycles.system_status = 'boiler' THEN cycles.runtime ELSE 0::NUMERIC END),
-            MAX(CASE WHEN cycles.system_status = 'boiler' THEN cycles.runtime ELSE 0::NUMERIC END)
+            COUNT(cycles.*) FILTER (WHERE cycles.system_status = 'boiler'),
+            SUM(cycles.runtime) FILTER (WHERE cycles.system_status = 'boiler'),
+            AVG(cycles.runtime) FILTER (WHERE cycles.system_status = 'boiler'),
+            MIN(cycles.runtime) FILTER (WHERE cycles.system_status = 'boiler'),
+            MAX(cycles.runtime) FILTER (WHERE cycles.system_status = 'boiler')
         FROM
             cycles;
 END;
