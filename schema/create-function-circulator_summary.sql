@@ -18,11 +18,11 @@ BEGIN
             event_group,
             system_status
         ) SELECT
-            COUNT(cycles.*) FILTER (WHERE cycles.system_status = 'circulator'),
-            SUM(cycles.runtime) FILTER (WHERE cycles.system_status = 'circulator'),
-            AVG(cycles.runtime) FILTER (WHERE cycles.system_status = 'circulator'),
-            MIN(cycles.runtime) FILTER (WHERE cycles.system_status = 'circulator'),
-            MAX(cycles.runtime) FILTER (WHERE cycles.system_status = 'circulator')
+            (COUNT(cycles.*) FILTER (WHERE cycles.system_status = 'circulator'))::INTEGER,
+            (SUM(cycles.runtime) FILTER (WHERE cycles.system_status = 'circulator'))::NUMERIC,
+            (AVG(cycles.runtime) FILTER (WHERE cycles.system_status = 'circulator'))::NUMERIC,
+            (MIN(cycles.runtime) FILTER (WHERE cycles.system_status = 'circulator'))::NUMERIC,
+            (MAX(cycles.runtime) FILTER (WHERE cycles.system_status = 'circulator'))::NUMERIC
         FROM
             cycles;
 END;
