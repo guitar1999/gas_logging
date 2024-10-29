@@ -19,14 +19,14 @@ BEGIN
             event_group,
             system_status
         ) SELECT
-            (SUM(cycles.btu) FILTER (WHERE cycles.system_status = 'boiler'))::NUMERIC,
-            (SUM(cycles.gallons) FILTER (WHERE cycles.system_status = 'boiler'))::NUMERIC,
-            (SUM(cycles.kwh))::NUMERIC,
-            (COUNT(cycles.*) FILTER (WHERE cycles.system_status = 'boiler'))::INTEGER,
-            (SUM(cycles.runtime) FILTER (WHERE cycles.system_status = 'boiler'))::NUMERIC,
-            (AVG(cycles.runtime) FILTER (WHERE cycles.system_status = 'boiler'))::NUMERIC,
-            (MIN(cycles.runtime) FILTER (WHERE cycles.system_status = 'boiler'))::NUMERIC,
-            (MAX(cycles.runtime) FILTER (WHERE cycles.system_status = 'boiler'))::NUMERIC
+            COALESCE(SUM(cycles.btu) FILTER (WHERE cycles.system_status = 'boiler'), 0)::NUMERIC,
+            COALESCE(SUM(cycles.gallons) FILTER (WHERE cycles.system_status = 'boiler'), 0)::NUMERIC,
+            COALESCE(SUM(cycles.kwh), 0)::NUMERIC,
+            COALESCE(COUNT(cycles.*) FILTER (WHERE cycles.system_status = 'boiler'), 0)::INTEGER,
+            COALESCE(SUM(cycles.runtime) FILTER (WHERE cycles.system_status = 'boiler'), 0)::NUMERIC,
+            COALESCE(AVG(cycles.runtime) FILTER (WHERE cycles.system_status = 'boiler'), 0)::NUMERIC,
+            COALESCE(MIN(cycles.runtime) FILTER (WHERE cycles.system_status = 'boiler'), 0)::NUMERIC,
+            COALESCE(MAX(cycles.runtime) FILTER (WHERE cycles.system_status = 'boiler'), 0)::NUMERIC
         FROM
             cycles;
 END;
