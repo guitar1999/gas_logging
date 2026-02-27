@@ -13,7 +13,7 @@ if (length(args) == 0) {
   month <- args[1]
 }
 
-query <- paste("SELECT DATE_PART('year', sum_date) AS year, DATE_PART('month', sum_date) AS month, DATE_PART('day', sum_date) AS day, hour, (sum_date || ' ' || hour || ':59:59')::timestamp with time zone AS timestamp, ((sum_date + ((DATE_PART('year', CURRENT_TIMESTAMP) - DATE_PART('year', sum_date))::integer || ' year')::interval)::date || ' ' || hour || ':59:59')::timestamp with time zone AS plotstamp, runtime, SUM(runtime) OVER (PARTITION BY date_part('year', sum_date) ORDER BY date_part('day', sum_date), hour) AS cumulative_runtime FROM oil_statistics.oil_sums_hourly_view WHERE DATE_PART('month', sum_date) = ", month, " ORDER BY DATE_PART('year', sum_date), DATE_PART('day', sum_date), hour;", sep="")
+query <- paste("SELECT DATE_PART('year', sum_date) AS year, DATE_PART('month', sum_date) AS month, DATE_PART('day', sum_date) AS day, hour, (sum_date || ' ' || hour || ':59:59')::timestamp with time zone AS timestamp, (make_date(2000, DATE_PART('month', sum_date)::integer, DATE_PART('day', sum_date)::integer) || ' ' || hour || ':59:59')::timestamp with time zone AS plotstamp, runtime, SUM(runtime) OVER (PARTITION BY date_part('year', sum_date) ORDER BY date_part('day', sum_date), hour) AS cumulative_runtime FROM oil_statistics.oil_sums_hourly_view WHERE DATE_PART('month', sum_date) = ", month, " ORDER BY DATE_PART('year', sum_date), DATE_PART('day', sum_date), hour;", sep="")
 measurements <- dbGetQuery(con, query)
 measurements$cumulative_runtime <- measurements$cumulative_runtime / 60
 
@@ -62,7 +62,7 @@ for (i in seq(1, length(years))){
 lines(prediction$timestamp, prediction$cumulative_runtime, col='blue4', lty=5)
 # lines(predline, col='darkred', lty=2, lwd=1.5)
 #abline(h=runtimeavg, col='orange')
-lines(cumruntimeavg$timestamp, cumruntimeavg$monthly_cum_avg_runtime / 60, col='orange')
+lines(cumruntimeavg$plotstamp, cumruntimeavg$monthly_cum_avg_runtime / 60, col='orange')
 if (ghostyears == 0) {
   ghosttext <- ''
   ghostcolor <- 'white'
