@@ -28,13 +28,13 @@ pymin <- max(measurements$cumulative_runtime[measurements$timestamp == pxmin])
 
 query <- paste("SELECT runtime_avg FROM oil_statistics.oil_statistics_monthly_view WHERE month = ", month, ";", sep="")
 runtimeavg <- dbGetQuery(con, query) / 60
-query <- paste("SELECT timestamp, monthly_cum_avg_runtime FROM oil_plotting.oil_cumulative_averages WHERE DATE_PART('MONTH', timestamp) = ", month, " ORDER BY timestamp;", sep="")
+query <- paste("SELECT timestamp, (make_date(2000, DATE_PART('month', timestamp)::integer, DATE_PART('day', timestamp)::integer) || ' ' || to_char(timestamp, 'HH24:MI:SS'))::timestamp with time zone AS plotstamp, monthly_cum_avg_runtime FROM oil_plotting.oil_cumulative_averages WHERE DATE_PART('MONTH', timestamp) = ", month, " ORDER BY timestamp;", sep="")
 cumruntimeavg <- dbGetQuery(con, query)
 # query <- "SELECT time, CASE WHEN minuteh IS NULL THEN minute ELSE minuteh END AS minute FROM prediction_test WHERE date_part('year', time) = date_part('year', CURRENT_TIMESTAMP) AND date_part('month', time) = date_part('month', CURRENT_TIMESTAMP) AND minute > 0 ORDER BY time;"
-query <- "SELECT timestamp, runtime FROM oil_plotting.cumulative_predicted_use_this_month_view ORDER BY timestamp;"
+query <- "SELECT timestamp, (make_date(2000, DATE_PART('month', timestamp)::integer, DATE_PART('day', timestamp)::integer) || ' ' || to_char(timestamp, 'HH24:MI:SS'))::timestamp with time zone AS plotstamp, runtime FROM oil_plotting.cumulative_predicted_use_this_month_view ORDER BY timestamp;"
 prediction <- dbGetQuery(con, query)
 prediction$runtime <- prediction$runtime / 60
-prediction <- rbind(measurements[dim(measurements)[1],c("timestamp", "cumulative_runtime")], setNames(data.frame(prediction), c(names(measurements)[5], names(measurements)[8])))
+prediction <- rbind(measurements[dim(measurements)[1],c("timestamp", "plotstamp", "cumulative_runtime")], setNames(data.frame(prediction), c(names(measurements)[5], names(measurements)[6], names(measurements)[8])))
 
 hseq <- seq(min(measurements$plotstamp), max(measurements$plotstamp) + 86400, 86400) - 3599
 
@@ -59,7 +59,7 @@ for (i in seq(1, length(years))){
     }
     lines(plotdata$plotstamp, plotdata$cumulative_runtime, col=linecolor, lwd=1.5)
 }
-lines(prediction$timestamp, prediction$cumulative_runtime, col='blue4', lty=5)
+lines(prediction$plotstamp, prediction$cumulative_runtime, col='blue4', lty=5)
 # lines(predline, col='darkred', lty=2, lwd=1.5)
 #abline(h=runtimeavg, col='orange')
 lines(cumruntimeavg$plotstamp, cumruntimeavg$monthly_cum_avg_runtime / 60, col='orange')
